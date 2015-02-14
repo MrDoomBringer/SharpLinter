@@ -58,17 +58,7 @@ namespace JTC.SharpLinter
                                     "                          default is:\n" +
                                     "                          \"{0}({1}): ({2}) {3} at character {4}\". The parms are\n" +
                                     "                          {0}: full file path, {1}: line number, {2}: source\n" +
-                                    "                          (lint or yui), {4}: character\n" +
-                                    "\n" +
-                                    "-p[h] yui|packer|best *.min.js      Pack/minimize valid input using YUI\n" +
-                                    "                                    Compressor, Dean Edwards' JS Packer, or \n" +
-                                    "                          whichever produces the smallest file. Output to a\n" +
-                                    "                          file \"filename.min.js\". If validation fails, \n" +
-                                    "                          the output file will be deleted (if exists)\n" +
-                                    "                          to ensure no version mismatch. If  -h is specified,\n" +
-                                    "                          the first comment block in the file /* ... */\n" +
-                                    "                          will be passed uncompressed at the beginning of the\n" +
-                                    "                          output.\n")
+                                    "                          (lint or yui), {4}: character\n")
                                     .Replace("\n", Environment.NewLine));
 
 

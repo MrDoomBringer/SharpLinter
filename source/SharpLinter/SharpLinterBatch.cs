@@ -82,7 +82,6 @@ namespace JTC.SharpLinter.Config
             {
                 List<JsLintData> fileErrors = new List<JsLintData>();
                 bool lintErrors=false;
-                bool YUIErrors=false;
                 fileCount++;
                 string javascript = File.ReadAllText(file);
                 if (javascript.IndexOf("/*" + Configuration.IgnoreFile + "*/") >= 0)
@@ -116,7 +115,7 @@ namespace JTC.SharpLinter.Config
                 }
 				
                 string successLine = String.Empty;
-                if (!(lintErrors || YUIErrors))
+                if (!lintErrors)
                 {
                     successLine = String.Format("{0}: No errors found.", file);
 					

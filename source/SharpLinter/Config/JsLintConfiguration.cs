@@ -65,6 +65,7 @@ namespace JTC.SharpLinter.Config
         public string JsLintFilePath { get; set; }
 
         public InputType InputType { get; set; }
+        
         /// <summary>
         /// The javascript code that will be used to parse the input file. 
         /// </summary>
@@ -378,6 +379,11 @@ namespace JTC.SharpLinter.Config
             return Tuple.Create<string, Type>(description, typeof(string));
         }
 
+        /// <summary>
+        /// Gets the options and their descriptions from the hard coded dictionary in this file
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         protected static Dictionary<string, Tuple<string, Type>> GetDescriptions(LinterType type)
         {
             switch (type)
@@ -394,9 +400,10 @@ namespace JTC.SharpLinter.Config
         {
             get
             {
-                if (_Descriptions ==null)  {
-                    _Descriptions = GetDescriptions(LinterType);
-                }
+                // This was previously gotten by trying to read the code, which fails with the new JSHint
+                //if (_Descriptions ==null)  {
+                    _Descriptions = GetDescriptions(LinterType.JSHint); // Hard coding to JSHint for now
+                //}
                 return _Descriptions;
             }
         }

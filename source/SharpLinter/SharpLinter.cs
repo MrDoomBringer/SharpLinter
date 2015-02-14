@@ -8,11 +8,13 @@ using JTC.SharpLinter.Config;
 
 namespace JTC.SharpLinter
 {
-	/// <summary>
-	///  Constructs an object capable of linting javascript files and returning the result of JS Lint
-	/// </summary>
+    /// <summary>
+    ///  Constructs an object capable of linting javascript files and returning the result of JS Lint
+    /// </summary>
     public class SharpLinter
     {
+        public Engines.JavascriptExecutor Engine = new Engines.JavascriptExecutor();
+
         #region constructor
 
         public SharpLinter(JsLintConfiguration config)
@@ -23,7 +25,7 @@ namespace JTC.SharpLinter
 
         protected void Process()
         {
-            var _context = new Engines.JavascriptExecutor();
+            //var _context = new Engines.JavascriptExecutor();
             //_context = new JavascriptContext();
 
             if (String.IsNullOrEmpty(Configuration.JsLintCode))
@@ -35,7 +37,7 @@ namespace JTC.SharpLinter
                 JSLint = Configuration.JsLintCode;
             }
 
-            _context.Run(JSLint);
+            Engine.Run(JSLint);
 
             string func = Configuration.LinterType == LinterType.JSHint ? "JSHINT" : "JSLINT";
             
@@ -44,7 +46,7 @@ namespace JTC.SharpLinter
             // anyway.
 
             string run =
-                @"lintRunner = function (dataCollector, javascript, options) {
+                @"function lintRunner(dataCollector, javascript, options) {
                     var data, result = JSLINT(javascript,options);
                     
                     if (!result) {
@@ -54,9 +56,12 @@ namespace JTC.SharpLinter
                         }
                         dataCollector.ProcessData(data);
                     }
-                };
+                }
             ".Replace("JSLINT", func);
-            _context.Run(run);
+
+            //_context.SetRunFunction(run);
+
+            Engine.Run(run);
         }
 
         #endregion
@@ -207,16 +212,17 @@ namespace JTC.SharpLinter
                 }
                 else
 				{
-					var _context = new Engines.JavascriptExecutor();
+                    //var _context = new Engines.JavascriptExecutor();
 
-					// Setting the externals parameters of the context
-					_context.SetParameter("dataCollector", dataCollector);
+                    // Setting the externals parameters of the context
+                    /*_context.SetParameter("dataCollector", dataCollector);
                     _context.SetParameter("javascript", finalJs.ToString());
-                    _context.SetParameter("options", Configuration.ToJsOptionVar());
+                    _context.SetParameter("options", Configuration.ToJsOptionVar());*/
 
 
                     // Running the script
-                    _context.Run("lintRunner(dataCollector, javascript, options);");
+                    //_context.Run("lintRunner(dataCollector, javascript, options);");
+                    Engine.CallFunction("lintRunner", new object[] { dataCollector, finalJs.ToString(), Configuration.ToJsOptionVar() });
                 }
 
                 JsLintResult result = new JsLintResult();

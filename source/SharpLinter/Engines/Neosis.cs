@@ -7,7 +7,7 @@ namespace JTC.SharpLinter.Engines
     {
         public JavascriptExecutor()
         {
-            Context = new Engine();
+            Context = new Jint.Engine();
         }
 
 		/// <summary>
@@ -15,11 +15,11 @@ namespace JTC.SharpLinter.Engines
 		/// </summary>
         protected Engine Context { get; private set; }
 
-        public object Run(string code)
+        public void Run(string code)
         {
             try
             {
-                return Context.Execute(code);
+                Context.Execute(code);
             }
             catch(Exception e)
             {
@@ -27,10 +27,21 @@ namespace JTC.SharpLinter.Engines
             }
         }
 
-		public void SetParameter()
-		{
-			// Set parameters of context?
-			Context.
-		}
+        public void CallFunction(string funcName, params object[] arguments)
+        {
+            try
+            {
+                Context.Invoke(funcName, arguments);
+            }
+            catch (Exception e)
+            {
+                throw new Exception("An error was reported by the javascript engine: " + e.Message);
+            }
+        }
+
+        public void SetParameter(string name, object value)
+        {
+            Context.SetValue(name, value);
+        }
     }
 }
