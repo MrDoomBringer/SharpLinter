@@ -19,6 +19,7 @@ namespace JTC.SharpLinter
         {
             return (text.Substring(startIndex, endIndex - startIndex));
         }
+
         public static string AfterLast(this string text, string find)
         {
             int index = text.LastIndexOf(find);
@@ -31,6 +32,7 @@ namespace JTC.SharpLinter
                 return (text.Substring(index + find.Length));
             }
         }
+
         /// <summary>
         /// Removes /r /n /t and  spaces
         /// </summary>
@@ -53,6 +55,7 @@ namespace JTC.SharpLinter
             return output.ToString();
         }
     }
+
     public static class Utility
     {
         /// <summary>
@@ -76,16 +79,6 @@ namespace JTC.SharpLinter
             return Path.IsPathRooted(path) ?
             path:
             Directory.GetCurrentDirectory() + "\\" + path;
-        }
-        /// <summary>
-        /// Evaluates the string to determine whether the value is true or false. Valid true strings are any form of "yes," "true," "on," or the digit "1"
-        /// False is always returned otherwise.
-        /// </summary>
-        /// <param name="theString"></param>
-        /// <returns></returns>
-        public static bool IsTrueString(string theString)
-        {
-            return ((bool)StringToBool(theString, false));
         }
 
         /// <summary>
@@ -112,18 +105,7 @@ namespace JTC.SharpLinter
             }
 
         }
-        public static string BeforeIncluding(this string text, string find)
-        {
-            int index = text.IndexOf(find);
-            if (index < 0 || index == text.Length)
-            {
-                return (String.Empty);
-            }
-            else
-            {
-                return (text.Substring(0, index+find.Length));
-            }
-        }
+		
         public static string Before(this string text, string find)
         {
             int index = text.IndexOf(find);
@@ -136,6 +118,7 @@ namespace JTC.SharpLinter
                 return (text.Substring(0, index));
             }
         }
+
         public static string BeforeLast(this string text, string find)
         {
             int index = text.LastIndexOf(find);
@@ -175,6 +158,7 @@ namespace JTC.SharpLinter
             return occurrences;
 
         }
+
         public static string AddListItem(this string list, string value, string separator)
         {
             if (String.IsNullOrEmpty(value))

@@ -114,80 +114,12 @@ namespace JTC.SharpLinter.Config
                     }
                     SummaryInfo.Add(leadIn);
                 }
-
-                SharpCompressor compressor = new SharpCompressor();
-
-                // We always check for YUI errors when there were no lint errors and
-                // we are compressing. Otherwise it might not compress.
-
-                if (Configuration.YUIValidation || 
-                    (!hasErrors && Configuration.MinimizeOnSuccess))
-                {
-                    compressor.Clear();
-                    compressor.AllowEval = Configuration.GetOption<bool>("evil");
-                    compressor.KeepHeader = Configuration.MinimizeKeepHeader;
-                    compressor.CompressorType = Configuration.CompressorType;
-
-                    hasErrors = !compressor.YUITest(javascript);
-                    
-                    if (hasErrors)
-                    {
-                        YUIErrors = true;
-                        foreach (var error in compressor.Errors)
-                        {
-                            fileErrors.Add(error);
-                        }
-                        
-                        SummaryInfo.Add(String.Format("{0}: YUI compressor found {1} errors.", file, compressor.ErrorCount));
-                    }
-                }
-
+				
                 string successLine = String.Empty;
                 if (!(lintErrors || YUIErrors))
                 {
                     successLine = String.Format("{0}: No errors found.", file);
-
-                    if (Configuration.MinimizeOnSuccess)
-                    {
-                        compressor.Clear();
-                        compressor.Input = javascript;
-                        compressor.CompressorType = Configuration.CompressorType;
-                        compressor.KeepHeader = Configuration.MinimizeKeepHeader;
-
-                        string target = MapFileName(file, Configuration.MinimizeFilenameMask);
-                        try
-                        {
-                            //Delete no matter what - there should never be a mismatch between regular & min
-                            if (File.Exists(target))
-                            {
-                                File.Delete(target);
-                            }
-
-                            if (compressor.Minimize())
-                            {
-                                File.WriteAllText(target, compressor.Output);
-                                string path = target.BeforeLast("\\");
-                                if (target.StartsWith(path))
-                                {
-                                    path = "." + target.Substring(path.Length);
-                                }
-                                else
-                                {
-                                    path = file;
-                                }
-                                successLine = successLine.AddListItem(String.Format("Compressed to '{0}' ({1})", path, compressor.Statistics), " ");
-                            }
-                            else
-                            {
-                                successLine = successLine.AddListItem("Errors were reported by the compressor. It's weird, but try running YUI validation."," ");
-                            }
-                        }
-
-                        catch (Exception e)
-                        {
-                            successLine=successLine.AddListItem(String.Format("Unable to compress output to '{0}': {1}", target, e.Message)," ");
-                        }
-                    }
+					
                     SummaryInfo.Add(successLine);
                 }
                 fileErrors.Sort(LintDataComparer);

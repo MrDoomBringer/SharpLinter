@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
 using System.Text;
 using System.IO;
-using System.Reflection;
 using System.Text.RegularExpressions;
-using Noesis.Javascript;
 using JTC.SharpLinter.Config;
 
 
@@ -23,12 +18,12 @@ namespace JTC.SharpLinter
         public SharpLinter(JsLintConfiguration config)
         {
             Configuration = config;
-            Initialize();
+            Process();
         }
 
-        protected void Initialize()
+        protected void Process()
         {
-            _context = new Engines.Neosis();
+            var _context = new Engines.JavascriptExecutor();
             //_context = new JavascriptContext();
 
             if (String.IsNullOrEmpty(Configuration.JsLintCode))
@@ -67,8 +62,7 @@ namespace JTC.SharpLinter
         #endregion
 
         #region private methods
-
-        private IJSEngineWrapper _context;
+		
         private object _lock = new Object();
       
         /// <summary>
@@ -212,9 +206,11 @@ namespace JTC.SharpLinter
                     dataCollector.Errors.Add(err);
                 }
                 else
-                {
-                    // Setting the externals parameters of the context
-                    _context.SetParameter("dataCollector", dataCollector);
+				{
+					var _context = new Engines.JavascriptExecutor();
+
+					// Setting the externals parameters of the context
+					_context.SetParameter("dataCollector", dataCollector);
                     _context.SetParameter("javascript", finalJs.ToString());
                     _context.SetParameter("options", Configuration.ToJsOptionVar());
 

@@ -12,11 +12,13 @@ namespace JTC.SharpLinter.Config
         JSLint=1,
         JSHint=2
     }
+
     public enum InputType
     {
         JavaScript=1,
         Html=2
     }
+
     public enum Verbosity
     {
         DetailOnly=1,
@@ -24,6 +26,7 @@ namespace JTC.SharpLinter.Config
         Debugging=3
 
     }
+
     /// <summary>
     ///  Represents configuring the Js Lint(er)
     /// </summary>
@@ -32,7 +35,6 @@ namespace JTC.SharpLinter.Config
         public JsLintConfiguration()
         {
             LinterType = 0;
-            CompressorType = CompressorType.best;
             using (Stream jslintStream = Assembly.Load("JTC.SharpLinter")
                                 .GetManifestResourceStream(
                                 @"JTC.SharpLinter.fulljslint.js"))
@@ -125,35 +127,10 @@ namespace JTC.SharpLinter.Config
         /// </summary>
         public Verbosity Verbosity{ get; set; }
         /// <summary>
-        /// Minimize the JS file and rewrite if no errors are reported using "MinimizeFileNameMask" to create a new file name
-        /// </summary>
-        public bool MinimizeOnSuccess {
-            get
-            {
-                return _MinimizeOnSuccess && InputType == InputType.JavaScript;
-            }
-            set
-            {
-                _MinimizeOnSuccess = value;
-            }
-        }
-        /// <summary>
-        /// When minimizing, pass the first comment block /* ... */ through to the output
-        /// </summary>
-        public bool MinimizeKeepHeader { get; set; }
-        /// <summary>
-        /// A mask to create the new filename, e.g. *.min.js
-        /// </summary>
-        public string MinimizeFilenameMask { get; set; }
-        /// <summary>
         /// A string used to identify a block to skip parsing inside a javascript file, for example, if this value is "jslint-ignore-start",
         /// then the string /*jslint-ignore-start*/ will identify the start of an ignore block
         /// </summary>
         public string IgnoreStart { get; set; }
-        /// <summary>
-        /// The type of Javascript compressor to use
-        /// </summary>
-        public CompressorType CompressorType { get; set; }
         /// <summary>
         /// A string used to identify a block to skip parsing inside a javascript file, for example, if this value is "jslint-ignore-end",
         /// then the string /*jslint-ignore-end*/ will identify the end of an ignore block
@@ -164,10 +141,6 @@ namespace JTC.SharpLinter.Config
         /// /*jslint-ignore-end*/ appearing anywhere in a file will cause it to be skipped
         /// </summary>
         public string IgnoreFile { get; set; }
-        /// <summary>
-        /// Run this thing through YUI compressor and report errors as well
-        /// </summary>
-        public bool YUIValidation { get; set; }
         /// <summary>
         /// The linter detected.
         /// </summary>

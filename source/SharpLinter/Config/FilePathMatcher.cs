@@ -20,6 +20,7 @@ namespace JTC.SharpLinter.Config
             return MatchFiles(patterns, names, exclude);
 
         }
+
         public static IEnumerable<string> MatchFiles(IEnumerable<string> patterns, IEnumerable<string> names, bool exclude)
         {
             List<string> matches = new List<string>();
@@ -66,11 +67,13 @@ namespace JTC.SharpLinter.Config
             //    }
             //}
         }
+
         private static string FileNamePart(string pattern)
         {
             return pattern.Substring(pattern.Length - 1, 1) == "\\" ? String.Empty :
                 (pattern.IndexOf("\\") == -1 ? pattern : pattern.AfterLast("\\"));
         }
+
         private static string PathPart(string pattern)
         {
             return pattern.Substring(pattern.Length - 1, 1) == "\\" ? pattern :

@@ -34,9 +34,8 @@ namespace JTC.SharpLinter
                 if (args.Length == 0)
                 {
                     Console.WriteLine("SharpLinter [-[r]f /path/*.js] [-o options] ");
-                    Console.WriteLine("            [-c sharplinter.conf] [-j jslint.js] [-y]");
+                    Console.WriteLine("            [-c sharplinter.conf] [-j jslint.js]");
                     Console.WriteLine("            [-v[1|2|3]] [--noglobal]");
-                    Console.WriteLine("            [-p[h] yui|packer|best mask] [-k] ");
                     Console.WriteLine("            [-i ignore-start ignore-end] [-if text] [-of \"format\"] [file]");
                     Console.WriteLine();
                     Console.WriteLine(("Options: \n\n" +
@@ -51,8 +50,6 @@ namespace JTC.SharpLinter
                                     "--noglobal                ignore global config file\n" +
                                     "-j jslint.js              use file specified to parse files instead of embedded\n" +
                                     "                          (probably old) script\n" +
-                                    "-y                        Also run the script through YUI compressor to look\n" +
-                                    "                          forerrors\n" +
                                     "\n" +
                                     "-i text-start text-end    Ignore blocks bounded by /*text-start*/ and\n" +
                                     "                          /*text-end*/\n" +
@@ -100,9 +97,7 @@ namespace JTC.SharpLinter
                 bool noGlobal = false;
 
                 LinterType linterType = 0;
-
-                CompressorType compressorType = 0;
-
+				
                 JsLintConfiguration finalConfig = new JsLintConfiguration();
 
 
@@ -124,27 +119,6 @@ namespace JTC.SharpLinter
                             break;
                         case "-ie":
                             finalConfig.IgnoreEnd = value;
-                            break;
-
-                        case "-p":
-                        case "-ph":
-
-                            if (!Enum.TryParse<CompressorType>(value, out compressorType))
-                            {
-                                Console.WriteLine(String.Format("Unknown pack option {0}", value));
-                                goto exit;
-                            }
-                            finalConfig.MinimizeOnSuccess = true;
-                            finalConfig.MinimizeFilenameMask = value2;
-                            if (arg == "-ph")
-                            {
-                                finalConfig.MinimizeKeepHeader = true;
-                            }
-                            finalConfig.CompressorType = compressorType;
-                            i += 2;
-                            break;
-                        case "-y":
-                            finalConfig.YUIValidation = true;
                             break;
                         case "-c":
                             globalConfigFile = value;

@@ -1,23 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Noesis.Javascript;
+using Jint;
 
 namespace JTC.SharpLinter.Engines
 {
-    public class Neosis: IJSEngineWrapper
+    public class JavascriptExecutor
     {
-        public Neosis()
+        public JavascriptExecutor()
         {
-            Context = new JavascriptContext();
+            Context = new Engine();
         }
-        protected JavascriptContext Context;
+
+		/// <summary>
+		/// Gets or sets the Javascript Context.
+		/// </summary>
+        protected Engine Context { get; private set; }
+
         public object Run(string code)
         {
             try
             {
-                return Context.Run(code);
+                return Context.Execute(code);
             }
             catch(Exception e)
             {
@@ -25,9 +27,10 @@ namespace JTC.SharpLinter.Engines
             }
         }
 
-        public void SetParameter(string name, object value)
-        {
-            Context.SetParameter(name,value);
-        }
+		public void SetParameter()
+		{
+			// Set parameters of context?
+			Context.
+		}
     }
 }
