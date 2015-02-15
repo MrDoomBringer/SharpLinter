@@ -620,8 +620,7 @@ namespace SharpLinter.Config
 					}
 					else
 					{
-						bool? val;
-						val = Utility.StringToBool(value.ToString(), null);
+						var val = Utility.StringToBool(value.ToString(), null);
 						if (val == null)
 						{
 							_options[option] = value.ToString();

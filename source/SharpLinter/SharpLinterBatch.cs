@@ -15,9 +15,9 @@ namespace SharpLinter
 			OutputFormat = "{0}({1}): ({2}) {3} {4}";
 		}
 
-		public JsLintConfiguration Configuration { get; set; }
+		private JsLintConfiguration Configuration { get; set; }
 
-		public string OutputFormat
+		private string OutputFormat
 		{
 			get
 			{
@@ -36,7 +36,7 @@ namespace SharpLinter
 		public int Process()
 		{
 			var lint = new SharpLinter(Configuration);
-			var SummaryInfo = new List<string>();
+			var summaryInfo = new List<string>();
 
 			if (Configuration.Verbosity == Verbosity.Debugging)
 			{
@@ -72,15 +72,19 @@ namespace SharpLinter
 				var lintErrors = false;
 				fileCount++;
 				var javascript = File.ReadAllText(file);
-				if (javascript.IndexOf("/*" + Configuration.IgnoreFile + "*/") >= 0)
+				if (javascript.IndexOf("/*" + Configuration.IgnoreFile + "*/", StringComparison.Ordinal) >= 0)
 				{
 					continue;
 				}
 
-				var ext = Path.GetExtension(file).ToLower();
-				Configuration.InputType = (ext == ".js" || ext == ".javascript")
-					? InputType.JavaScript
-					: InputType.Html;
+				var extension = Path.GetExtension(file);
+				if (extension != null)
+				{
+					var ext = extension.ToLower();
+					Configuration.InputType = (ext == ".js" || ext == ".javascript")
+						? InputType.JavaScript
+						: InputType.Html;
+				}
 
 				var result = lint.Lint(javascript);
 				var hasErrors = result.Errors.Count > 0;
@@ -100,15 +104,14 @@ namespace SharpLinter
 					{
 						leadIn += String.Format(" Stopped processing due to maxerr={0} option.", Configuration.MaxErrors);
 					}
-					SummaryInfo.Add(leadIn);
+					summaryInfo.Add(leadIn);
 				}
 
-				var successLine = String.Empty;
 				if (!lintErrors)
 				{
-					successLine = String.Format("{0}: No errors found.", file);
+					var successLine = String.Format("{0}: No errors found.", file);
 
-					SummaryInfo.Add(successLine);
+					summaryInfo.Add(successLine);
 				}
 				fileErrors.Sort(LintDataComparer);
 				allErrors.AddRange(fileErrors);
@@ -116,7 +119,7 @@ namespace SharpLinter
 			if (Configuration.Verbosity == Verbosity.Debugging || Configuration.Verbosity == Verbosity.Summary)
 			{
 				// Output file-by-file results at beginning
-				foreach (var item in SummaryInfo)
+				foreach (var item in summaryInfo)
 				{
 					Console.WriteLine(item);
 				}
@@ -143,12 +146,10 @@ namespace SharpLinter
 					Console.WriteLine(OutputFormat, error.FilePath, error.Line, error.Source, error.Reason, character);
 				}
 			}
-			if (Configuration.Verbosity == Verbosity.Debugging)
-			{
-				Console.WriteLine();
-				Console.WriteLine("SharpLinter: Finished processing at {0:MM/dd/yy H:mm:ss zzz}. Processed {1} files.", DateTime.Now,
-					fileCount);
-			}
+			if (Configuration.Verbosity != Verbosity.Debugging) return allErrors.Count;
+			Console.WriteLine();
+			Console.WriteLine("SharpLinter: Finished processing at {0:MM/dd/yy H:mm:ss zzz}. Processed {1} files.", DateTime.Now,
+				fileCount);
 
 			return allErrors.Count;
 		}
@@ -168,7 +169,7 @@ namespace SharpLinter
 			return maskStart + pathBase + maskEnd + "." + maskExt;
 		}
 
-		private int LintDataComparer(JsLintData x, JsLintData y)
+		private static int LintDataComparer(JsLintData x, JsLintData y)
 		{
 			return x.Line.CompareTo(y.Line);
 		}

@@ -21,7 +21,6 @@ namespace SharpLinter.Config
 
 		public static IEnumerable<string> MatchFiles(IEnumerable<string> patterns, IEnumerable<string> names, bool exclude)
 		{
-			var matches = new List<string>();
 			Regex nameRegex = null;
 			var match = false;
 
@@ -42,8 +41,9 @@ namespace SharpLinter.Config
 					}
 
 
-					match = (pathPattern == String.Empty || MatchPathOnly(cleanPattern, cleanPath)) &&
-							(namePattern == String.Empty ? true : nameRegex.IsMatch(fileNameOnly));
+					if (nameRegex != null)
+						match = (pathPattern == String.Empty || MatchPathOnly(cleanPattern, cleanPath)) &&
+								(namePattern == String.Empty || nameRegex.IsMatch(fileNameOnly));
 					if (match)
 					{
 						break;
@@ -60,14 +60,14 @@ namespace SharpLinter.Config
 		{
 			return pattern.Substring(pattern.Length - 1, 1) == "\\"
 				? String.Empty
-				: (pattern.IndexOf("\\") == -1 ? pattern : pattern.AfterLast("\\"));
+				: (pattern.IndexOf("\\", StringComparison.Ordinal) == -1 ? pattern : pattern.AfterLast("\\"));
 		}
 
 		private static string PathPart(string pattern)
 		{
 			return pattern.Substring(pattern.Length - 1, 1) == "\\"
 				? pattern
-				: (pattern.IndexOf("\\") == -1 ? string.Empty : pattern.BeforeLast("\\"));
+				: (pattern.IndexOf("\\", StringComparison.Ordinal) == -1 ? string.Empty : pattern.BeforeLast("\\"));
 		}
 
 		private static bool MatchPathOnly(string pattern, string path)
@@ -76,18 +76,18 @@ namespace SharpLinter.Config
 			{
 				return false;
 			}
-			if (pattern.IndexOf(":") > 0 || pattern.IndexOf("\\\\") == 0)
+			if (pattern.IndexOf(":", StringComparison.Ordinal) > 0 || pattern.IndexOf("\\\\", StringComparison.Ordinal) == 0)
 			{
 				return path.StartsWith(pattern);
 			}
-			return path.IndexOf(pattern) >= 0;
+			return path.IndexOf(pattern, StringComparison.Ordinal) >= 0;
 		}
 
 		private static class FindFilesPatternToRegex
 		{
 			private const string NonDotCharacters = @"[^.]*";
 			private static readonly Regex HasQuestionMarkRegEx = new Regex(@"\?", RegexOptions.Compiled);
-			private static Regex HasAsteriskRegex = new Regex(@"\*", RegexOptions.Compiled);
+			private static Regex _hasAsteriskRegex = new Regex(@"\*", RegexOptions.Compiled);
 			private static readonly Regex IlegalCharactersRegex = new Regex("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
 			private static readonly Regex CatchExtentionRegex = new Regex(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
 

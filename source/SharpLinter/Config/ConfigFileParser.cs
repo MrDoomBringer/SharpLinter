@@ -35,13 +35,13 @@ namespace SharpLinter.Config
 
 		private string GetSection(string sectionName)
 		{
-			var pos = ConfigData.IndexOf("/*" + sectionName);
+			var pos = ConfigData.IndexOf("/*" + sectionName, StringComparison.Ordinal);
 			if (pos < 0)
 			{
 				return String.Empty;
 			}
 
-			var endPos = ConfigData.IndexOf(sectionName + "*/", pos);
+			var endPos = ConfigData.IndexOf(sectionName + "*/", pos, StringComparison.Ordinal);
 			if (endPos < 0)
 			{
 				throw new Exception("Config section '" + sectionName + "' was not closed.");

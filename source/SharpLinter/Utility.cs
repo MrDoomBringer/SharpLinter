@@ -22,7 +22,7 @@ namespace SharpLinter
 
 		public static string AfterLast(this string text, string find)
 		{
-			var index = text.LastIndexOf(find);
+			var index = text.LastIndexOf(find, StringComparison.Ordinal);
 			if (index < 0 || index + find.Length >= text.Length)
 			{
 				return (String.Empty);
@@ -87,22 +87,28 @@ namespace SharpLinter
 		/// <returns></returns>
 		public static bool? StringToBool(string theString, bool? defaultValue)
 		{
-			var lcaseString = (theString == null ? "" : theString.ToLower().Trim());
-			if (lcaseString == "true" || lcaseString == "yes" || lcaseString == "y" || lcaseString == "1" || lcaseString == "on")
+			var lcaseString = theString?.ToLower().Trim() ?? "";
+			switch (lcaseString)
 			{
-				return (true);
-			}
-			if (lcaseString == "false" || lcaseString == "no" || lcaseString == "n" || lcaseString == "0" ||
-				lcaseString == "off")
-			{
-				return (false);
+				case "true":
+				case "yes":
+				case "y":
+				case "1":
+				case "on":
+					return (true);
+				case "false":
+				case "no":
+				case "n":
+				case "0":
+				case "off":
+					return (false);
 			}
 			return (defaultValue);
 		}
 
 		public static string Before(this string text, string find)
 		{
-			var index = text.IndexOf(find);
+			var index = text.IndexOf(find, StringComparison.Ordinal);
 			if (index < 0 || index == text.Length)
 			{
 				return (String.Empty);
@@ -112,12 +118,8 @@ namespace SharpLinter
 
 		public static string BeforeLast(this string text, string find)
 		{
-			var index = text.LastIndexOf(find);
-			if (index >= 0)
-			{
-				return (text.Substring(0, index));
-			}
-			return String.Empty;
+			var index = text.LastIndexOf(find, StringComparison.Ordinal);
+			return index >= 0 ? (text.Substring(0, index)) : String.Empty;
 		}
 
 		public static int OccurrencesOf(this string text, string find)
@@ -127,7 +129,7 @@ namespace SharpLinter
 			var occurrences = 0;
 			while (!finished)
 			{
-				pos = text.IndexOf(find, pos);
+				pos = text.IndexOf(find, pos, StringComparison.Ordinal);
 				if (pos >= 0)
 				{
 					occurrences++;
@@ -151,27 +153,17 @@ namespace SharpLinter
 			{
 				return list.Trim();
 			}
-			if (list == null)
-			{
-				list = String.Empty;
-			}
-			else
-			{
-				list = list.Trim();
-			}
+			list = list?.Trim() ?? String.Empty;
 
-			var pos = (list + separator).IndexOf(value + separator);
-			if (pos < 0)
+			var pos = (list + separator).IndexOf(value + separator, StringComparison.Ordinal);
+			if (pos >= 0) return (list);
+			if (list.LastIndexOf(separator, StringComparison.Ordinal) == list.Length - separator.Length)
 			{
-				if (list.LastIndexOf(separator) == list.Length - separator.Length)
-				{
-					// do not add separator - it already exists
-					return list + value;
-				}
-				return (list + (list == "" ? "" : separator) + value);
+				// do not add separator - it already exists
+				return list + value;
 			}
+			return (list + (list == "" ? "" : separator) + value);
 			// already has value
-			return (list);
 		}
 	}
 }

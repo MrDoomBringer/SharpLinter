@@ -186,12 +186,13 @@ namespace SharpLinter
 				}
 				if (ignoreErrors)
 				{
-					// there was no ignore-end found, so cancel the results 
-					var err = new JsLintData();
-					err.Line = startSkipLine;
-					err.Character = 0;
-					err.Reason = "An ignore-start marker was found, but there was no ignore-end. Nothing was ignored.";
-					dataCollector.Errors.Add(err);
+					// there was no ignore-end found, so cancel the results
+					dataCollector.Errors.Add(new JsLintData
+					{
+						Line = startSkipLine,
+						Character = 0,
+						Reason = "An ignore-start marker was found, but there was no ignore-end. Nothing was ignored."
+					});
 
 					hasSkips = false;
 				}
@@ -199,11 +200,7 @@ namespace SharpLinter
 
 				if (finalJs.Length == 0)
 				{
-					var err = new JsLintData();
-					err.Line = 0;
-					err.Character = 0;
-					err.Reason = "The file was empty.";
-					dataCollector.Errors.Add(err);
+					dataCollector.Errors.Add(new JsLintData {Line = 0, Character = 0, Reason = "The file was empty."});
 				}
 				else
 				{
@@ -220,8 +217,7 @@ namespace SharpLinter
 					_engine.CallFunction("lintRunner", dataCollector, finalJs.ToString(), _configuration.ToJsOptionVar());
 				}
 
-				var result = new JsLintResult();
-				result.Errors = new List<JsLintData>();
+				var result = new JsLintResult {Errors = new List<JsLintData>()};
 
 				var index = 0;
 				while (result.Errors.Count <= _configuration.MaxErrors
@@ -248,11 +244,9 @@ namespace SharpLinter
 					}
 				}
 				// if we went over, mark that there were more errors and remove last one
-				if (result.Errors.Count > _configuration.MaxErrors)
-				{
-					result.Errors.RemoveAt(result.Errors.Count - 1);
-					result.Limited = true;
-				}
+				if (result.Errors.Count <= _configuration.MaxErrors) return result;
+				result.Errors.RemoveAt(result.Errors.Count - 1);
+				result.Limited = true;
 
 				return result;
 			}
