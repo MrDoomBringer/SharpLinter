@@ -85,11 +85,11 @@ namespace SharpLinter.Config
 
 		private static class FindFilesPatternToRegex
 		{
+			private const string NonDotCharacters = @"[^.]*";
 			private static readonly Regex HasQuestionMarkRegEx = new Regex(@"\?", RegexOptions.Compiled);
 			private static Regex HasAsteriskRegex = new Regex(@"\*", RegexOptions.Compiled);
 			private static readonly Regex IlegalCharactersRegex = new Regex("[" + @"\/:<>|" + "\"]", RegexOptions.Compiled);
 			private static readonly Regex CatchExtentionRegex = new Regex(@"^\s*.+\.([^\.]+)\s*$", RegexOptions.Compiled);
-			private static readonly string NonDotCharacters = @"[^.]*";
 
 			public static Regex Convert(string pattern)
 			{

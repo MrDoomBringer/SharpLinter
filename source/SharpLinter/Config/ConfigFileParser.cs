@@ -6,7 +6,7 @@ namespace SharpLinter.Config
 {
 	public class ConfigFileParser
 	{
-		private static readonly char[] stringSep = {','};
+		private static readonly char[] StringSep = {','};
 		public string ConfigData { get; set; }
 
 		/// <summary>
@@ -18,13 +18,9 @@ namespace SharpLinter.Config
 		/// <returns></returns>
 		public IEnumerable<KeyValuePair<string, string>> GetKVPSection(string sectionName)
 		{
-			var list = GetSection(sectionName).Split(stringSep, StringSplitOptions.RemoveEmptyEntries);
-			foreach (var item in list)
-			{
-				var kvpArray = item.Split(':');
-				yield return new KeyValuePair<string, string>(kvpArray[0].Trim(),
-					kvpArray.Length > 1 ? kvpArray[1].Trim() : "true");
-			}
+			var list = GetSection(sectionName).Split(StringSep, StringSplitOptions.RemoveEmptyEntries);
+			return list.Select(item => item.Split(':')).Select(kvpArray => new KeyValuePair<string, string>(kvpArray[0].Trim(),
+				kvpArray.Length > 1 ? kvpArray[1].Trim() : "true"));
 		}
 
 		public IEnumerable<string> GetValueSection(string sectionName, string separators)
@@ -32,17 +28,12 @@ namespace SharpLinter.Config
 			var splitSeparators = separators.ToArray();
 
 			var list = GetSection(sectionName).Split(splitSeparators, StringSplitOptions.RemoveEmptyEntries);
-			foreach (var item in list)
-			{
-				var output = item.Replace("\n", "").Replace("\r", "").Replace("\t", "").Trim();
-				if (output != string.Empty)
-				{
-					yield return output;
-				}
-			}
+			return
+				list.Select(item => item.Replace("\n", "").Replace("\r", "").Replace("\t", "").Trim())
+					.Where(output => output != string.Empty);
 		}
 
-		public string GetSection(string sectionName)
+		private string GetSection(string sectionName)
 		{
 			var pos = ConfigData.IndexOf("/*" + sectionName);
 			if (pos < 0)

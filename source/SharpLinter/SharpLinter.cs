@@ -13,33 +13,34 @@ namespace SharpLinter
 	/// </summary>
 	public class SharpLinter
 	{
+		private readonly JsLintConfiguration _configuration;
+		private readonly JavascriptExecutor _engine = new JavascriptExecutor();
 		private readonly Regex _isEndScriptRegex = new Regex(@"</script.*?>");
-		private readonly object _lock = new Object();
-		private readonly JsLintConfiguration Configuration;
-		private readonly JavascriptExecutor Engine = new JavascriptExecutor();
-		private Regex _isIgnoreEnd;
-		private Regex _isIgnoreFile;
-		private Regex _isIgnoreStart;
+		private readonly object _lock = new object();
+		private Regex _isIgnoreEndRegex;
+		private Regex _isIgnoreFileRegex;
+		private Regex _isIgnoreStartRegex;
 		private Regex _isStartScriptRegex = new Regex(@"<script (.|\n)*?type\s*=\s*[""|']text/javascript[""|'](.|\n)*?>");
 		// skip anything with a src=".."
 		private Regex _isStartScriptRegexFail = new Regex(@"<script (.|\n)*?src\s*=\s*[""|'].*?[""|'](.|\n)*?>");
-		protected Func<string, bool> isIgnoreEnd;
-		protected Func<string, bool> isIgnoreFile;
-		protected Func<string, bool> isIgnoreStart;
 
 		/// <summary>
 		/// The script that gets run
 		/// </summary>
-		private string JSLint;
+		private string _jsLint;
 
 		/// <summary>
 		/// Map of lines that should be excluded (true for an index means exclude that line)
 		/// </summary>
-		private List<bool> LineExclusion;
+		private List<bool> _lineExclusion;
+
+		private Func<string, bool> _isIgnoreEnd;
+		private Func<string, bool> _isIgnoreFile;
+		private Func<string, bool> _isIgnoreStart;
 
 		public SharpLinter(JsLintConfiguration config)
 		{
-			Configuration = config;
+			_configuration = config;
 			Process();
 		}
 
@@ -48,15 +49,15 @@ namespace SharpLinter
 			//var _context = new Engines.JavascriptExecutor();
 			//_context = new JavascriptContext();
 
-			if (String.IsNullOrEmpty(Configuration.JsLintCode))
+			if (String.IsNullOrEmpty(_configuration.JsLintCode))
 			{
 				throw new Exception("No JSLINT/JSHINT code was specified in the configuration.");
 			}
-			JSLint = Configuration.JsLintCode;
+			_jsLint = _configuration.JsLintCode;
 
-			Engine.Run(JSLint);
+			_engine.Run(_jsLint);
 
-			var func = Configuration.LinterType == LinterType.JSHint ? "JSHINT" : "JSLINT";
+			var func = _configuration.LinterType == LinterType.JSHint ? "JSHINT" : "JSLINT";
 
 			// a bug (apparently) in the Noesis wrapper causes a StackOverflow exception when returning data sometimes.
 			// not sure why but removing "functions" from the returned object resolves it. we don't need that
@@ -78,7 +79,7 @@ namespace SharpLinter
 
 			//_context.SetRunFunction(run);
 
-			Engine.Run(run);
+			_engine.Run(run);
 		}
 
 		private void Configure()
@@ -86,27 +87,27 @@ namespace SharpLinter
 			_isStartScriptRegex = new Regex(@"<script (.|\n)*?type\s*=\s*[""|']text/javascript[""|'](.|\n)*?>");
 			// skip anything with a src=".."
 			_isStartScriptRegexFail = new Regex(@"<script (.|\n)*?src\s*=\s*[""|'].*?[""|'](.|\n)*?>");
-			if (!String.IsNullOrEmpty(Configuration.IgnoreEnd) &&
-				!String.IsNullOrEmpty(Configuration.IgnoreStart))
+			if (!String.IsNullOrEmpty(_configuration.IgnoreEnd) &&
+				!String.IsNullOrEmpty(_configuration.IgnoreStart))
 			{
-				_isIgnoreStart = new Regex(@"/\*\s*" + Configuration.IgnoreStart + @"\s*\*/");
-				_isIgnoreEnd = new Regex(@"/\*\s*" + Configuration.IgnoreEnd + @"\s*\*/");
-				isIgnoreStart = isIgnoreStartImpl;
-				isIgnoreEnd = isIgnoreEndImpl;
+				_isIgnoreStartRegex = new Regex(@"/\*\s*" + _configuration.IgnoreStart + @"\s*\*/");
+				_isIgnoreEndRegex = new Regex(@"/\*\s*" + _configuration.IgnoreEnd + @"\s*\*/");
+				_isIgnoreStart = IsIgnoreStartImpl;
+				_isIgnoreEnd = IsIgnoreEndImpl;
 			}
 			else
 			{
-				isIgnoreStart = notImplemented;
-				isIgnoreEnd = notImplemented;
+				_isIgnoreStart = NotImplemented;
+				_isIgnoreEnd = NotImplemented;
 			}
-			if (!String.IsNullOrEmpty(Configuration.IgnoreFile))
+			if (!String.IsNullOrEmpty(_configuration.IgnoreFile))
 			{
-				_isIgnoreFile = new Regex(@"/\\s*" + Configuration.IgnoreFile + @"\s*\*/");
-				isIgnoreFile = isIgnoreFileImpl;
+				_isIgnoreFileRegex = new Regex(@"/\\s*" + _configuration.IgnoreFile + @"\s*\*/");
+				_isIgnoreFile = IsIgnoreFileImpl;
 			}
 			else
 			{
-				isIgnoreFile = notImplemented;
+				_isIgnoreFile = NotImplemented;
 			}
 		}
 
@@ -119,20 +120,20 @@ namespace SharpLinter
 			{
 				var hasSkips = false;
 				var hasUnused = false;
-				if (Configuration.LinterType == LinterType.JSLint)
+				if (_configuration.LinterType == LinterType.JSLint)
 				{
-					hasUnused = Configuration.GetOption<bool>("unused");
+					hasUnused = _configuration.GetOption<bool>("unused");
 				}
-				else if (Configuration.LinterType == LinterType.JSLint)
+				else if (_configuration.LinterType == LinterType.JSLint)
 				{
 					// we consider the "unused" option to be activated if the config value is either empty
 					// (since the default is "true") or anything other than "false"
-					var unusedConfig = Configuration.GetOption<string>("unused");
+					var unusedConfig = _configuration.GetOption<string>("unused");
 					hasUnused = string.IsNullOrEmpty(unusedConfig) || unusedConfig != "false";
 				}
 				var dataCollector = new LintDataCollector(hasUnused);
 
-				LineExclusion = new List<bool>();
+				_lineExclusion = new List<bool>();
 				// lines are evaluated, but errors are ignored: we want to use this for blocks excluded 
 				// within a javascript file, because otherwise the parser will freak out if other parts of the
 				// code wouldn't validate if that block were missing
@@ -140,7 +141,7 @@ namespace SharpLinter
 
 				// lines are not evaluted by the parser at all - in HTML files we want to pretend non-JS lines
 				// are not even there.
-				var ignoreLines = Configuration.InputType == InputType.Html;
+				var ignoreLines = _configuration.InputType == InputType.Html;
 
 				var startSkipLine = 0;
 
@@ -154,12 +155,12 @@ namespace SharpLinter
 						line++;
 
 						if (!ignoreLines
-							&& Configuration.InputType == InputType.Html && isEndScript(text))
+							&& _configuration.InputType == InputType.Html && IsEndScript(text))
 						{
 							ignoreLines = true;
 						}
 
-						if (!ignoreErrors && isIgnoreStart(text))
+						if (!ignoreErrors && _isIgnoreStart(text))
 						{
 							startSkipLine = line;
 							ignoreErrors = true;
@@ -167,17 +168,17 @@ namespace SharpLinter
 						}
 						// always check for end - if they both appear on a line, don't do anything. should 
 						// always fall back to continuing to check.
-						if (ignoreErrors && isIgnoreEnd(text))
+						if (ignoreErrors && _isIgnoreEnd(text))
 						{
 							ignoreErrors = false;
 						}
-						LineExclusion.Add(ignoreErrors);
+						_lineExclusion.Add(ignoreErrors);
 
 						finalJs.AppendLine(ignoreLines ? "" : text);
 
 						if (ignoreLines
-							&& Configuration.InputType == InputType.Html
-							&& isStartScript(text))
+							&& _configuration.InputType == InputType.Html
+							&& IsStartScript(text))
 						{
 							ignoreLines = false;
 						}
@@ -216,14 +217,14 @@ namespace SharpLinter
 
 					// Running the script
 					//_context.Run("lintRunner(dataCollector, javascript, options);");
-					Engine.CallFunction("lintRunner", dataCollector, finalJs.ToString(), Configuration.ToJsOptionVar());
+					_engine.CallFunction("lintRunner", dataCollector, finalJs.ToString(), _configuration.ToJsOptionVar());
 				}
 
 				var result = new JsLintResult();
 				result.Errors = new List<JsLintData>();
 
 				var index = 0;
-				while (result.Errors.Count <= Configuration.MaxErrors
+				while (result.Errors.Count <= _configuration.MaxErrors
 						&& index < dataCollector.Errors.Count)
 				{
 					var error = dataCollector.Errors[index++];
@@ -233,9 +234,9 @@ namespace SharpLinter
 					}
 					else
 					{
-						if (error.Line >= 0 && error.Line < LineExclusion.Count)
+						if (error.Line >= 0 && error.Line < _lineExclusion.Count)
 						{
-							if (!LineExclusion[error.Line - 1])
+							if (!_lineExclusion[error.Line - 1])
 							{
 								result.Errors.Add(error);
 							}
@@ -247,7 +248,7 @@ namespace SharpLinter
 					}
 				}
 				// if we went over, mark that there were more errors and remove last one
-				if (result.Errors.Count > Configuration.MaxErrors)
+				if (result.Errors.Count > _configuration.MaxErrors)
 				{
 					result.Errors.RemoveAt(result.Errors.Count - 1);
 					result.Limited = true;
@@ -262,7 +263,7 @@ namespace SharpLinter
 		/// </summary>
 		/// <param name="text"></param>
 		/// <returns></returns>
-		protected bool isStartScript(string text)
+		private bool IsStartScript(string text)
 		{
 			var result = false;
 			var matches = _isStartScriptRegex.Matches(text);
@@ -276,29 +277,29 @@ namespace SharpLinter
 			return result;
 		}
 
-		protected bool isEndScript(string text)
+		private bool IsEndScript(string text)
 		{
 			return _isEndScriptRegex.IsMatch(text);
 		}
 
-		protected bool notImplemented(string what)
+		private static bool NotImplemented(string what)
 		{
 			return false;
 		}
 
-		protected bool isIgnoreStartImpl(string text)
+		private bool IsIgnoreStartImpl(string text)
 		{
-			return _isIgnoreStart.IsMatch(text);
+			return _isIgnoreStartRegex.IsMatch(text);
 		}
 
-		protected bool isIgnoreEndImpl(string text)
+		private bool IsIgnoreEndImpl(string text)
 		{
-			return _isIgnoreEnd.IsMatch(text);
+			return _isIgnoreEndRegex.IsMatch(text);
 		}
 
-		protected bool isIgnoreFileImpl(string text)
+		private bool IsIgnoreFileImpl(string text)
 		{
-			return _isIgnoreFile.IsMatch(text);
+			return _isIgnoreFileRegex.IsMatch(text);
 		}
 	}
 }

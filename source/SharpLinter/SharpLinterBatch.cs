@@ -7,7 +7,7 @@ namespace SharpLinter
 {
 	public class SharpLinterBatch
 	{
-		private string _OutputFormat;
+		private string _outputFormat;
 
 		public SharpLinterBatch(JsLintConfiguration configuration)
 		{
@@ -21,25 +21,21 @@ namespace SharpLinter
 		{
 			get
 			{
-				if (HasCustomOutputFormat())
-				{
-					return Configuration.OutputFormat;
-				}
-				return _OutputFormat;
+				return HasCustomOutputFormat() ? Configuration.OutputFormat : _outputFormat;
 			}
-			set { _OutputFormat = value; }
+			set { _outputFormat = value; }
 		}
 
 		public IEnumerable<PathInfo> FilePaths { get; set; }
 
-		protected string StringOrMissingDescription(string text)
+		private static string StringOrMissingDescription(string text)
 		{
-			return String.IsNullOrEmpty(text) ? "[None Specified]" : text;
+			return string.IsNullOrEmpty(text) ? "[None Specified]" : text;
 		}
 
 		public int Process()
 		{
-			var lint = new global::SharpLinter.SharpLinter(Configuration);
+			var lint = new SharpLinter(Configuration);
 			var SummaryInfo = new List<string>();
 
 			if (Configuration.Verbosity == Verbosity.Debugging)
