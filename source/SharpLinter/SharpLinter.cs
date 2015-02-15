@@ -13,9 +13,29 @@ namespace SharpLinter
 	/// </summary>
 	public class SharpLinter
 	{
-		private JavascriptExecutor Engine = new JavascriptExecutor();
+		private readonly Regex _isEndScriptRegex = new Regex(@"</script.*?>");
+		private readonly object _lock = new Object();
+		private readonly JsLintConfiguration Configuration;
+		private readonly JavascriptExecutor Engine = new JavascriptExecutor();
+		private Regex _isIgnoreEnd;
+		private Regex _isIgnoreFile;
+		private Regex _isIgnoreStart;
+		private Regex _isStartScriptRegex = new Regex(@"<script (.|\n)*?type\s*=\s*[""|']text/javascript[""|'](.|\n)*?>");
+		// skip anything with a src=".."
+		private Regex _isStartScriptRegexFail = new Regex(@"<script (.|\n)*?src\s*=\s*[""|'].*?[""|'](.|\n)*?>");
+		protected Func<string, bool> isIgnoreEnd;
+		protected Func<string, bool> isIgnoreFile;
+		protected Func<string, bool> isIgnoreStart;
 
-		#region constructor
+		/// <summary>
+		/// The script that gets run
+		/// </summary>
+		private string JSLint;
+
+		/// <summary>
+		/// Map of lines that should be excluded (true for an index means exclude that line)
+		/// </summary>
+		private List<bool> LineExclusion;
 
 		public SharpLinter(JsLintConfiguration config)
 		{
@@ -60,28 +80,6 @@ namespace SharpLinter
 
 			Engine.Run(run);
 		}
-
-		#endregion
-
-		#region private methods
-
-		private readonly object _lock = new Object();
-
-		/// <summary>
-		/// Map of lines that should be excluded (true for an index means exclude that line)
-		/// </summary>
-		private List<bool> LineExclusion;
-
-		/// <summary>
-		/// The script that gets run
-		/// </summary>
-		private string JSLint;
-
-		private JsLintConfiguration Configuration;
-
-		#endregion
-
-		#region public methods
 
 		private void Configure()
 		{
@@ -259,15 +257,6 @@ namespace SharpLinter
 			}
 		}
 
-		#endregion
-
-		#region private methods
-
-		private Regex _isStartScriptRegex = new Regex(@"<script (.|\n)*?type\s*=\s*[""|']text/javascript[""|'](.|\n)*?>");
-		// skip anything with a src=".."
-		private Regex _isStartScriptRegexFail = new Regex(@"<script (.|\n)*?src\s*=\s*[""|'].*?[""|'](.|\n)*?>");
-
-
 		/// <summary>
 		/// Returns true if a script appears on this line.
 		/// </summary>
@@ -287,43 +276,29 @@ namespace SharpLinter
 			return result;
 		}
 
-		private readonly Regex _isEndScriptRegex = new Regex(@"</script.*?>");
-
 		protected bool isEndScript(string text)
 		{
 			return _isEndScriptRegex.IsMatch(text);
 		}
-
-		private Regex _isIgnoreStart;
-		private Regex _isIgnoreEnd;
-		private Regex _isIgnoreFile;
 
 		protected bool notImplemented(string what)
 		{
 			return false;
 		}
 
-		protected Func<string, bool> isIgnoreStart;
-
 		protected bool isIgnoreStartImpl(string text)
 		{
 			return _isIgnoreStart.IsMatch(text);
 		}
-
-		protected Func<string, bool> isIgnoreEnd;
 
 		protected bool isIgnoreEndImpl(string text)
 		{
 			return _isIgnoreEnd.IsMatch(text);
 		}
 
-		protected Func<string, bool> isIgnoreFile;
-
 		protected bool isIgnoreFileImpl(string text)
 		{
 			return _isIgnoreFile.IsMatch(text);
 		}
-
-		#endregion
 	}
 }
