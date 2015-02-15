@@ -1,0 +1,38 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#
+var propertyList = new List<JsonProperty>{new JsonProperty("herp", "herp", "string")};
+#>
+using Newtonsoft.Json;
+
+namespace SharpLinter.Config
+{
+	internal class LintConfig
+	{
+<#foreach (var property in propertyList) {#>
+		/// <summary>
+		/// JSON setting for <#=property.JsonName#>.
+		/// </summary>
+		[JsonProperty("<#=property.JsonName#>")]
+		public <#=property.Type#> <#=property.Name#> { get; set; }
+<#}#>	}
+}
+<#+
+internal class JsonProperty
+{
+	public JsonProperty(string jsonName, string name, string type)
+	{
+		JsonName = jsonName;
+		Name = name;
+		Type = type;
+	}
+
+	public string JsonName { get; private set; }
+	public string Name { get; private set; }
+	public string Type { get; private set; }
+}
+#>

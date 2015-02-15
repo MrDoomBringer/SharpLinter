@@ -34,6 +34,9 @@
     <Reference Include="Jint">
       <HintPath>..\packages\Jint.2.4.0\lib\portable-net40+sl50+win+wpa81+wp80\Jint.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -44,8 +47,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\ConfigFileParser.cs" />
+    <Compile Include="Config\ConfigParser.cs" />
     <Compile Include="Config\FilePathMatcher.cs" />
     <Compile Include="Config\JsLintConfiguration.cs" />
+    <Compile Include="Config\LintConfig1.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>LintConfig.tt</DependentUpon>
+    </Compile>
     <Compile Include="Config\PathInfo.cs" />
     <Compile Include="Engines\JavascriptExecutor.cs" />
     <Compile Include="LintDataCollector.cs" />
@@ -62,6 +71,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Config\LintConfig.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>LintConfig1.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
