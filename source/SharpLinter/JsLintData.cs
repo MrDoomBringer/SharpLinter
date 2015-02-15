@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace JTC.SharpLinter
+namespace SharpLinter
 {
 	/// <summary>
 	/// Represents a piece of data from the JsLint compiler.
@@ -36,9 +36,6 @@ namespace JTC.SharpLinter
 		/// </summary>
 		public string Source { get; set; }
 
-		public bool Complete
-		{
-			get { return !String.IsNullOrEmpty(Reason); }
-		}
+		public bool Complete => !String.IsNullOrEmpty(Reason);
 	}
 }

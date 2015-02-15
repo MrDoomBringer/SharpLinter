@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using JTC.SharpLinter.Config;
+using SharpLinter.Config;
 
 /*
  * 
@@ -13,7 +13,7 @@ using JTC.SharpLinter.Config;
  * 
  */
 
-namespace JTC.SharpLinter
+namespace SharpLinter
 {
 	internal class SharpLinterExe
 	{

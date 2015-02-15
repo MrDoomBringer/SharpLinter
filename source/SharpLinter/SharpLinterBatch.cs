@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using SharpLinter.Config;
 
-namespace JTC.SharpLinter.Config
+namespace SharpLinter
 {
 	public class SharpLinterBatch
 	{
@@ -38,7 +39,7 @@ namespace JTC.SharpLinter.Config
 
 		public int Process()
 		{
-			var lint = new SharpLinter(Configuration);
+			var lint = new global::SharpLinter.SharpLinter(Configuration);
 			var SummaryInfo = new List<string>();
 
 			if (Configuration.Verbosity == Verbosity.Debugging)

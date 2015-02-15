@@ -1,4 +1,4 @@
-﻿namespace JTC.SharpLinter
+﻿namespace SharpLinter
 {
 	/// <summary>
 	/// Represents the type of the lint data

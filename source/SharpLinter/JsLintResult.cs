@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace JTC.SharpLinter
+namespace SharpLinter
 {
 	/// <summary>
 	/// Represents the result of linting some javascript

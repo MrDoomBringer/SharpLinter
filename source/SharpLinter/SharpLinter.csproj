@@ -8,8 +8,8 @@
     <ProjectGuid>{63E74178-8088-4EFE-85BB-5A3F27651D75}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>JTC.SharpLinter</RootNamespace>
-    <AssemblyName>JTC.SharpLinter</AssemblyName>
+    <RootNamespace>SharpLinter</RootNamespace>
+    <AssemblyName>SharpLinter</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

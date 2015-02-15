@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-namespace JTC.SharpLinter
+namespace SharpLinter
 {
 	public static class ExtensionMethods
 	{

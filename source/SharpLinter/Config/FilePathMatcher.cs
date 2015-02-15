@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace JTC.SharpLinter.Config
+namespace SharpLinter.Config
 {
 	public static class FilePathMatcher
 	{
@@ -24,7 +24,6 @@ namespace JTC.SharpLinter.Config
 			var matches = new List<string>();
 			Regex nameRegex = null;
 			var match = false;
-//            bool noPatterns = true;
 
 			foreach (var path in names)
 			{
@@ -43,7 +42,7 @@ namespace JTC.SharpLinter.Config
 					}
 
 
-					match = (pathPattern == String.Empty ? true : MatchPathOnly(cleanPattern, cleanPath)) &&
+					match = (pathPattern == String.Empty || MatchPathOnly(cleanPattern, cleanPath)) &&
 							(namePattern == String.Empty ? true : nameRegex.IsMatch(fileNameOnly));
 					if (match)
 					{
@@ -55,16 +54,6 @@ namespace JTC.SharpLinter.Config
 					yield return path;
 				}
 			}
-			// think this was from when we had the patterns/paths loops inverted. Should never be needed (actually causes dups now)
-			// .. if the pattern loop is skipped, match will be false, as is correct.
-
-			//if (noPatterns)
-			//{
-			//    foreach (string name in names)
-			//    {
-			//        yield return name;
-			//    }
-			//}
 		}
 
 		private static string FileNamePart(string pattern)

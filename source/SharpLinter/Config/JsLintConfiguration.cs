@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-namespace JTC.SharpLinter.Config
+namespace SharpLinter.Config
 {
 	public enum LinterType
 	{
@@ -46,9 +46,9 @@ namespace JTC.SharpLinter.Config
 		public JsLintConfiguration()
 		{
 			LinterType = 0;
-			using (var jslintStream = Assembly.Load("JTC.SharpLinter")
+			using (var jslintStream = Assembly.Load("SharpLinter")
 				.GetManifestResourceStream(
-					@"JTC.SharpLinter.fulljslint.js"))
+					@"SharpLinter.fulljslint.js"))
 			{
 				using (var sr = new StreamReader(jslintStream))
 				{

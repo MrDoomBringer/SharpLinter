@@ -1,9 +1,9 @@
 ﻿using System;
 using Jint;
 
-namespace JTC.SharpLinter.Engines
+namespace SharpLinter.Engines
 {
-	public class JavascriptExecutor
+	public sealed class JavascriptExecutor
 	{
 		public JavascriptExecutor()
 		{
@@ -13,7 +13,7 @@ namespace JTC.SharpLinter.Engines
 		/// <summary>
 		/// Gets or sets the Javascript Context.
 		/// </summary>
-		protected Engine Context { get; }
+		private Engine Context { get; }
 
 		public void Run(string code)
 		{

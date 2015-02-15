@@ -1,4 +1,4 @@
-﻿namespace JTC.SharpLinter.Config
+﻿namespace SharpLinter.Config
 {
 	public class PathInfo
 	{
@@ -8,7 +8,7 @@
 			Recurse = recurse;
 		}
 
-		public string Path { get; set; }
-		public bool Recurse { get; set; }
+		public string Path { get; }
+		public bool Recurse { get; }
 	}
 }

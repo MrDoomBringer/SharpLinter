@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using JTC.SharpLinter.Config;
-using JTC.SharpLinter.Engines;
+using SharpLinter.Config;
+using SharpLinter.Engines;
 
-namespace JTC.SharpLinter
+namespace SharpLinter
 {
 	/// <summary>
 	/// Constructs an object capable of linting javascript files and returning the result of JS Lint
 	/// </summary>
 	public class SharpLinter
 	{
-		public JavascriptExecutor Engine = new JavascriptExecutor();
+		private JavascriptExecutor Engine = new JavascriptExecutor();
 
 		#region constructor
 
@@ -23,7 +23,7 @@ namespace JTC.SharpLinter
 			Process();
 		}
 
-		protected void Process()
+		private void Process()
 		{
 			//var _context = new Engines.JavascriptExecutor();
 			//_context = new JavascriptContext();
@@ -70,20 +70,20 @@ namespace JTC.SharpLinter
 		/// <summary>
 		/// Map of lines that should be excluded (true for an index means exclude that line)
 		/// </summary>
-		protected List<bool> LineExclusion;
+		private List<bool> LineExclusion;
 
 		/// <summary>
 		/// The script that gets run
 		/// </summary>
-		protected string JSLint;
+		private string JSLint;
 
-		protected JsLintConfiguration Configuration;
+		private JsLintConfiguration Configuration;
 
 		#endregion
 
 		#region public methods
 
-		protected void Configure()
+		private void Configure()
 		{
 			_isStartScriptRegex = new Regex(@"<script (.|\n)*?type\s*=\s*[""|']text/javascript[""|'](.|\n)*?>");
 			// skip anything with a src=".."

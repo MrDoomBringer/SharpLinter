@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace JTC.SharpLinter.Config
+namespace SharpLinter.Config
 {
 	public class ConfigFileParser
 	{

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace JTC.SharpLinter
+namespace SharpLinter
 {
 	public class LintDataCollector
 	{
