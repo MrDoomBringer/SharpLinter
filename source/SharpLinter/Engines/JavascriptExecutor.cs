@@ -27,11 +27,11 @@ namespace SharpLinter.Engines
 			}
 		}
 
-		public void CallFunction(string funcName, params object[] arguments)
+		public Jint.Native.JsValue CallFunction(string funcName, params object[] arguments)
 		{
 			try
 			{
-				Context.Invoke(funcName, arguments);
+				return Context.Invoke(funcName, arguments);
 			}
 			catch (Exception e)
 			{

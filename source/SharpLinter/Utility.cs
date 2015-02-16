@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Linq;
+using System.Dynamic;
 
 namespace SharpLinter
 {
@@ -50,7 +52,12 @@ namespace SharpLinter
 			}
 			return output.ToString();
 		}
-	}
+
+        public static Dictionary<string, object> ToDictionary(this ExpandoObject obj)
+        {
+            return (obj as IDictionary<string, object>).ToDictionary(x => x.Key, x => x.Value);
+        }
+    }
 
 	public static class Utility
 	{
@@ -165,5 +172,5 @@ namespace SharpLinter
 			return (list + (list == "" ? "" : separator) + value);
 			// already has value
 		}
-	}
+    }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Dynamic;
+using System.Reflection;
 
 namespace SharpLinter
 {
@@ -15,11 +17,11 @@ namespace SharpLinter
 
 		public List<JsLintData> Errors { get; } = new List<JsLintData>();
 
-		public void ProcessData(object data)
+        public void ProcessData(ExpandoObject data)
 		{
-			var dataDict = data as Dictionary<string, object>;
+            var dataDict = data.ToDictionary();
 
-			if (dataDict == null) return;
+            if (dataDict == null) return;
 			if (dataDict.ContainsKey("errors"))
 			{
 				ProcessListOfObject(dataDict["errors"], error =>
@@ -83,13 +85,13 @@ namespace SharpLinter
 
 		private static void ProcessListOfObject(object obj, Action<Dictionary<string, object>> processor)
 		{
-			var array = obj as object[];
+            var array = obj as object[];
 
-			if (array == null) return;
-			foreach (var objItemDictionary in array.OfType<Dictionary<string, object>>())
-			{
-				processor(objItemDictionary);
-			}
-		}
-	}
+            if (array == null) return;
+            foreach (var objItemDictionary in array.OfType<Dictionary<string, object>>())
+            {
+                processor(objItemDictionary);
+            }
+        }
+    }
 }

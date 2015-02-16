@@ -64,7 +64,7 @@ namespace SharpLinter
 			// anyway.
 
 			var run =
-				@"function lintRunner(dataCollector, javascript, options) {
+                @"function lintRunner(javascript, options) {
                     var data, result = JSLINT(javascript,options);
                     
                     if (!result) {
@@ -72,7 +72,8 @@ namespace SharpLinter
                         if (data.functions) {
                             delete data.functions;
                         }
-                        dataCollector.ProcessData(data);
+
+                        return data;
                     }
                 }
             ".Replace("JSLINT", func);
@@ -204,17 +205,9 @@ namespace SharpLinter
 				}
 				else
 				{
-					//var _context = new Engines.JavascriptExecutor();
+					Jint.Native.JsValue data=_engine.CallFunction("lintRunner", finalJs.ToString(), _configuration.ToJsOptionVar());
 
-					// Setting the externals parameters of the context
-					/*_context.SetParameter("dataCollector", dataCollector);
-                    _context.SetParameter("javascript", finalJs.ToString());
-                    _context.SetParameter("options", Configuration.ToJsOptionVar());*/
-
-
-					// Running the script
-					//_context.Run("lintRunner(dataCollector, javascript, options);");
-					_engine.CallFunction("lintRunner", dataCollector, finalJs.ToString(), _configuration.ToJsOptionVar());
+                    dataCollector.ProcessData(data.ToObject() as System.Dynamic.ExpandoObject);
 				}
 
 				var result = new JsLintResult {Errors = new List<JsLintData>()};
