@@ -21,7 +21,7 @@ namespace SharpLinter
 		{
 			get
 			{
-				return HasCustomOutputFormat() ? Configuration.OutputFormat : _outputFormat;
+				return string.IsNullOrEmpty(Configuration.OutputFormat) ? _outputFormat : Configuration.OutputFormat;
 			}
 			set { _outputFormat = value; }
 		}
@@ -43,8 +43,7 @@ namespace SharpLinter
 				Console.WriteLine("SharpLinter: Beginning processing at {0:MM/dd/yy H:mm:ss zzz}", DateTime.Now);
 				Console.WriteLine("Global configuration file: {0}", StringOrMissingDescription(Configuration.GlobalConfigFilePath));
 				Console.WriteLine("JSLINT path: {0}", StringOrMissingDescription(Configuration.JsLintFilePath));
-				Console.WriteLine("Using linter options for {0}, {1}", Configuration.LinterType,
-					StringOrMissingDescription(Configuration.JsLintVersion));
+				Console.WriteLine("Using linter options for JsHint");
 				Console.WriteLine("LINT options: " + StringOrMissingDescription(Configuration.OptionsToString()));
 				Console.WriteLine("LINT globals: " + StringOrMissingDescription(Configuration.GlobalsToString()));
 				Console.WriteLine("Sharplint: ignorestart={0}, ignoreend={1}, ignorefile={2}", Configuration.IgnoreStart,
@@ -139,7 +138,7 @@ namespace SharpLinter
 				{
 					var character = error.Character.ToString();
 					// add a small introducing string before the character number if we are using the default output string
-					if (!HasCustomOutputFormat())
+					if (string.IsNullOrEmpty(Configuration.OutputFormat))
 					{
 						character = error.Character >= 0 ? "at character " + error.Character : String.Empty;
 					}
@@ -172,11 +171,6 @@ namespace SharpLinter
 		private static int LintDataComparer(JsLintData x, JsLintData y)
 		{
 			return x.Line.CompareTo(y.Line);
-		}
-
-		private bool HasCustomOutputFormat()
-		{
-			return !String.IsNullOrEmpty(Configuration.OutputFormat);
 		}
 	}
 }

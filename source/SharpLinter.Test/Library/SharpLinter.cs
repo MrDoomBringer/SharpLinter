@@ -85,7 +85,7 @@ namespace SharpLinter.Test.Library
 		{
 			var config =
 				JsLintConfiguration.ParseString(
-					"  maxerr : 2,eqeqeq,unused :    TRUE,predef : test1 TEST2   3 ,evil:false , browser : true", LinterType.JSHint);
+					"  maxerr : 2,eqeqeq,unused :    TRUE,predef : test1 TEST2   3 ,evil:false , browser : true");
 
 			Assert.AreEqual(2, config.MaxErrors);
 			Assert.AreEqual("maxerr: 2, eqeqeq: true, unused: true, evil: false, browser: true", config.OptionsToString());
@@ -101,8 +101,7 @@ namespace SharpLinter.Test.Library
 		{
 			var config =
 				JsLintConfiguration.ParseString(
-					"  maxerr : 400,eqeqeq : true,unused :    FALSE,predef : 1 window alert,evil:true , browser : false",
-					LinterType.JSHint);
+					"  maxerr : 400,eqeqeq : true,unused :    FALSE,predef : 1 window alert,evil:true , browser : false");
 
 			Assert.AreEqual(400, config.MaxErrors);
 			Assert.AreEqual("maxerr: 400, eqeqeq: true, unused: false, evil: true, browser: false", config.OptionsToString());

@@ -24,7 +24,7 @@ namespace SharpLinter
 			try
 			{
 				var _Configuration = new Lazy<JsLintConfiguration>();
-				Func<JsLintConfiguration> Configuration = () => { return _Configuration.Value; };
+				Func<JsLintConfiguration> Configuration = () => _Configuration.Value;
 
 				if (args.Length == 0)
 				{
@@ -56,10 +56,7 @@ namespace SharpLinter
 										"                          (lint or yui), {4}: character\n")
 						.Replace("\n", Environment.NewLine));
 
-
-					Console.Write("Options Format:");
-					Console.WriteLine(JsLintConfiguration.GetParseOptions());
-
+					
 					Console.WriteLine();
 					Console.WriteLine("E.g.");
 					Console.WriteLine("JsLint -f input.js -f input2.js");
@@ -79,7 +76,6 @@ namespace SharpLinter
 				var recurse = false;
 				var noGlobal = false;
 
-				LinterType linterType = 0;
 
 				var finalConfig = new JsLintConfiguration();
 
@@ -187,7 +183,7 @@ namespace SharpLinter
 					{
 						try
 						{
-							finalConfig.MergeOptions(JsLintConfiguration.ParseConfigFile(config, linterType));
+							finalConfig.MergeOptions(JsLintConfiguration.ParseConfigFile(config));
 							finalConfig.GlobalConfigFilePath = globalConfigPath;
 						}
 						catch (Exception e)
@@ -207,7 +203,7 @@ namespace SharpLinter
 				{
 					try
 					{
-						finalConfig.MergeOptions(JsLintConfiguration.ParseString(commandLineOptions, linterType));
+						finalConfig.MergeOptions(JsLintConfiguration.ParseString(commandLineOptions));
 					}
 					catch (Exception e)
 					{

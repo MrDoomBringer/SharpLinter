@@ -41,45 +41,26 @@ namespace SharpLinter
 		public SharpLinter(JsLintConfiguration config)
 		{
 			_configuration = config;
-			Process();
-		}
-
-		private void Process()
-		{
-			//var _context = new Engines.JavascriptExecutor();
-			//_context = new JavascriptContext();
 
 			if (String.IsNullOrEmpty(_configuration.JsLintCode))
 			{
 				throw new Exception("No JSLINT/JSHINT code was specified in the configuration.");
 			}
-			_jsLint = _configuration.JsLintCode;
 
-			_engine.Run(_jsLint);
+			_engine.Run(_configuration.JsLintCode);
 
-			var func = _configuration.LinterType == LinterType.JSHint ? "JSHINT" : "JSLINT";
-
-			// a bug (apparently) in the Noesis wrapper causes a StackOverflow exception when returning data sometimes.
-			// not sure why but removing "functions" from the returned object resolves it. we don't need that
-			// anyway.
-
-			var run =
-				@"function lintRunner(dataCollector, javascript, options) {
-                    var data, result = JSLINT(javascript,options);
+			_engine.Run(@"function lintRunner(dataCollector, javascript, options) {
+                    var data, result = JSHINT(javascript,options);
                     
                     if (!result) {
-                        data = JSLINT.data();
+                        data = JSHINT.data();
                         if (data.functions) {
                             delete data.functions;
                         }
                         dataCollector.ProcessData(data);
                     }
                 }
-            ".Replace("JSLINT", func);
-
-			//_context.SetRunFunction(run);
-
-			_engine.Run(run);
+            ");
 		}
 
 		private void Configure()
@@ -119,18 +100,10 @@ namespace SharpLinter
 			lock (_lock)
 			{
 				var hasSkips = false;
-				var hasUnused = false;
-				if (_configuration.LinterType == LinterType.JSLint)
-				{
-					hasUnused = _configuration.GetOption<bool>("unused");
-				}
-				else if (_configuration.LinterType == LinterType.JSLint)
-				{
 					// we consider the "unused" option to be activated if the config value is either empty
 					// (since the default is "true") or anything other than "false"
 					var unusedConfig = _configuration.GetOption<string>("unused");
-					hasUnused = string.IsNullOrEmpty(unusedConfig) || unusedConfig != "false";
-				}
+					var hasUnused = string.IsNullOrEmpty(unusedConfig) || unusedConfig != "false";
 				var dataCollector = new LintDataCollector(hasUnused);
 
 				_lineExclusion = new List<bool>();

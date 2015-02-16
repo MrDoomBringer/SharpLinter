@@ -7,12 +7,6 @@ using System.Text;
 
 namespace SharpLinter.Config
 {
-	public enum LinterType
-	{
-		JSLint = 1,
-		JSHint = 2
-	}
-
 	public enum InputType
 	{
 		JavaScript = 1,
@@ -36,9 +30,6 @@ namespace SharpLinter.Config
 		/// </summary>
 		private readonly Dictionary<string, object> _options = new Dictionary<string, object>();
 
-		private string _jsLintCode;
-		protected bool _MinimizeOnSuccess;
-
 		/// <summary>
 		/// File masks that will be excluded from wildcard matches
 		/// </summary>
@@ -46,7 +37,6 @@ namespace SharpLinter.Config
 
 		public JsLintConfiguration()
 		{
-			LinterType = 0;
 			using (var jslintStream = Assembly.Load("SharpLinter")
 				.GetManifestResourceStream(
 					@"SharpLinter.fulljslint.js"))
@@ -71,57 +61,14 @@ namespace SharpLinter.Config
 		public string GlobalConfigFilePath { get; set; }
 
 		public string JsLintFilePath { get; set; }
+
 		public InputType InputType { get; set; }
 
 		/// <summary>
 		/// The javascript code that will be used to parse the input file.
 		/// </summary>
-		public string JsLintCode
-		{
-			get { return _jsLintCode; }
-			set
-			{
-				JsLintVersion = "Unknown version (minimized source?)";
-				if (value.IndexOf("var JSHINT") > 0)
-				{
-					LinterType = LinterType.JSHint;
-					JsLintVersion = "Unknown version (JSHINT builds do not include a date or version number)";
-				}
-				else if (value.IndexOf("var JSLINT") > 0)
-				{
-					LinterType = LinterType.JSLint;
-				}
-				else
-				{
-					throw new Exception("What is this code you are trying to use? It does not appear to be either JSHINT or JSLINT.");
-				}
+		public string JsLintCode { get; set; }
 
-				// even through JSHINT doesn't have the version date, look for it to ID the embedded one
-				var useNextLine = false;
-				var lineNumber = 0;
-				using (var reader = new StringReader(value))
-				{
-					string line;
-					while ((line = reader.ReadLine()) != null && lineNumber < 100)
-					{
-						lineNumber++;
-						if (useNextLine)
-						{
-							JsLintVersion = "version info: " + line.AfterLast("//").Trim();
-							break;
-						}
-						if (line.StartsWith("// jslint.js"))
-						{
-							useNextLine = true;
-						}
-					}
-				}
-				_jsLintCode = value;
-				GetOptionsFromCode();
-			}
-		}
-
-		public string JsLintVersion { get; set; }
 		public string OutputFormat { get; set; }
 
 		/// <summary>
@@ -150,22 +97,7 @@ namespace SharpLinter.Config
 		/// </summary>
 		public string IgnoreFile { get; set; }
 
-		/// <summary>
-		/// The linter detected.
-		/// </summary>
-		public LinterType LinterType { get; private set; }
-
-		private Dictionary<string, Tuple<string, Type>> Descriptions
-		{
-			get
-			{
-				// This was previously gotten by trying to read the code, which fails with the new JSHint
-				//if (_Descriptions ==null)  {
-				_Descriptions = GetDescriptions(LinterType.JSHint); // Hard coding to JSHint for now
-				//}
-				return _Descriptions;
-			}
-		}
+		private Dictionary<string, Tuple<string, Type>> Descriptions => DescriptionsHint;
 
 		public int MaxErrors => GetOption<int>("maxerr");
 
@@ -186,54 +118,7 @@ namespace SharpLinter.Config
 				}
 			}
 		}
-
-		private void GetOptionsFromCode()
-		{
-			_Descriptions = new Dictionary<string, Tuple<string, Type>>();
-
-			var pos = JsLintCode.IndexOf("boolOptions =");
-			if (pos < 0)
-			{
-				pos = JsLintCode.IndexOf("boolOptions=");
-			}
-			if (pos < 0)
-			{
-				return;
-			}
-			pos = JsLintCode.IndexOf("{", pos);
-			var parsedData = String.Empty;
-			// if it's not compressed, get rid of comments first
-			using (var reader = new StringReader(JsLintCode.Substring(pos + 1)))
-			{
-				string line;
-				var done = false;
-				while ((line = reader.ReadLine()) != null && !done)
-				{
-					if (line.IndexOf("//") >= 0)
-					{
-						line = line.Before("//") + Environment.NewLine;
-					}
-					if (line.IndexOf("}") > 0)
-					{
-						line = line.Before("}");
-						done = true;
-					}
-					parsedData += line.RemoveWhitespace();
-				}
-			}
-
-			var opts = parsedData.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
-			foreach (var key in opts.Select(val => val.Split(':')).Select(parts => parts[0].Trim()).Where(key => !_Descriptions.ContainsKey(key)))
-			{
-				_Descriptions[key] = new Tuple<string, Type>("Unknown purpose - obtained from source code", typeof (bool));
-			}
-			// overlay with description info we know
-			foreach (var kvp in GetDescriptions(LinterType))
-			{
-				_Descriptions[kvp.Key] = kvp.Value;
-			}
-		}
-
+		
 		private static Tuple<string, Type> BoolOpt(string description)
 		{
 			return Tuple.Create(description, typeof (bool));
@@ -248,62 +133,7 @@ namespace SharpLinter.Config
 		{
 			return Tuple.Create(description, typeof (string));
 		}
-
-		/// <summary>
-		/// Gets the options and their descriptions from the hard coded dictionary in this file
-		/// </summary>
-		/// <param name="type"></param>
-		/// <returns></returns>
-		private static Dictionary<string, Tuple<string, Type>> GetDescriptions(LinterType type)
-		{
-			switch (type)
-			{
-				case LinterType.JSHint:
-					return DescriptionsHint;
-				case LinterType.JSLint:
-					return DescriptionsLint;
-				default:
-					throw new Exception("Unknown linter type.");
-			}
-		}
-
-		/// <summary>
-		/// Returns human readable text description of what the Parse function will process
-		/// </summary>
-		public static string GetParseOptions()
-		{
-			var returner = new StringBuilder();
-
-			returner.AppendLine("[option : value | option][,option: value | option]...");
-			returner.AppendLine();
-			//returner.AppendLine("maxerr  : Number - maximum number of errors");
-			//returner.AppendLine("predef  : String - space seperated list of predefined globals");
-			//returner.AppendLine("unused  : Boolean - If true, errors on unused local vars")m,
-			returner.AppendLine("JSLINT options:");
-			returner.AppendLine();
-			AddDescriptionGroup(DescriptionsLint, returner);
-
-			returner.AppendLine();
-			returner.AppendLine("JSHINT options: options that function opposite");
-			returner.AppendLine("heir JSLint counterpart are marked with (!)");
-			returner.AppendLine();
-
-			AddDescriptionGroup(DescriptionsHint, returner);
-
-			return returner.ToString();
-		}
-
-		private static void AddDescriptionGroup(Dictionary<string, Tuple<string, Type>> dictionary, StringBuilder returner)
-		{
-			foreach (var optInfo in dictionary)
-			{
-				returner.AppendFormat("{0} : ({1}) {1}", optInfo.Key,
-					optInfo.Value.Item2.ToString().AfterLast("."),
-					optInfo.Value.Item1);
-				returner.AppendLine();
-			}
-		}
-
+		
 		/// <summary>
 		/// Merges the options from another config object into this one. The new options supercede if the same
 		/// are specified.
@@ -337,46 +167,45 @@ namespace SharpLinter.Config
 		public void MergeOptions(string configFile)
 		{
 			var data = File.ReadAllText(configFile);
-			var config = ParseConfigFile(data, LinterType);
+			var config = ParseConfigFile(data);
 			MergeOptions(config);
 		}
 
 		public IEnumerable<string> GetMatchedFiles(IEnumerable<PathInfo> paths)
 		{
-			var hasItems = false;
 			foreach (var item in paths)
 			{
-				var value = Utility.ResolveRelativePath_Current(item.Path);
+				var qualifiedPath = Utility.ResolveRelativePath_Current(item.Path);
 
 				string filter = null;
-				if (value.Contains("*"))
+				if (qualifiedPath.Contains("*"))
 				{
-					filter = Path.GetFileName(value);
-					value = value.Substring(0, value.Length - filter.Length);
+					filter = Path.GetFileName(qualifiedPath);
+					qualifiedPath = qualifiedPath.Substring(0, qualifiedPath.Length - filter.Length);
 				}
 				// is directory or file?
 
 
-				if (!Directory.Exists(value))
+				if (!Directory.Exists(qualifiedPath))
 				{
 					// perhaps its a file?
-					if (filter == null && !File.Exists(value))
+					if (filter == null && !File.Exists(qualifiedPath))
 					{
-						Console.WriteLine("Ignoring missing file or directory: {0}", value);
+						Console.WriteLine("Ignoring missing file or directory: {0}", qualifiedPath);
 						continue;
 					}
-					yield return value;
+					yield return qualifiedPath;
 					continue;
 				}
 				var directorys = new List<DirectoryInfo>
 				{
-					new DirectoryInfo(value)
+					new DirectoryInfo(qualifiedPath)
 				};
 				while (directorys.Count > 0)
 				{
 					var di = directorys[0];
 					directorys.RemoveAt(0);
-					var files  = !string.IsNullOrWhiteSpace(filter) ? di.GetFiles(filter) : di.GetFiles();
+					var files = !string.IsNullOrWhiteSpace(filter) ? di.GetFiles(filter) : di.GetFiles();
 
 					var allFiles = files.Select(fi => fi.FullName).ToList();
 
@@ -392,9 +221,6 @@ namespace SharpLinter.Config
 					}
 				}
 			}
-			if (!hasItems)
-			{
-			}
 		}
 
 		/// <summary>
@@ -402,40 +228,9 @@ namespace SharpLinter.Config
 		/// </summary>
 		/// <param name="configFileData"></param>
 		/// <returns></returns>
-		public static JsLintConfiguration ParseConfigFile(string configFileData, LinterType linterType)
+		public static JsLintConfiguration ParseConfigFile(string configFileData)
 		{
-			var config = new JsLintConfiguration {LinterType = linterType};
-			var parser = new ConfigFileParser {ConfigData = configFileData};
-
-			foreach (var kvp in parser.GetKVPSection("jslint"))
-			{
-				config.SetOption(kvp.Key, kvp.Value);
-			}
-			foreach (var kvp in parser.GetKVPSection("global"))
-			{
-				config.SetGlobal(kvp.Key);
-			}
-			foreach (var item in parser.GetValueSection("exclude", "\n,"))
-			{
-				config.SetFileExclude(item);
-			}
-			foreach (var item in parser.GetKVPSection("sharplinter"))
-			{
-				switch (item.Key.ToLower())
-				{
-					case "ignorestart":
-						config.IgnoreStart = item.Value;
-						break;
-					case "ignoreend":
-						config.IgnoreEnd = item.Value;
-						break;
-					case "ignorefile":
-						config.IgnoreFile = item.Value;
-						break;
-					default:
-						throw new Exception("Unknown sharpLinter option '" + item.Key + "'");
-				}
-			}
+			var config = new JsLintConfiguration();
 			return config;
 		}
 
@@ -444,9 +239,9 @@ namespace SharpLinter.Config
 		/// </summary>
 		/// <param name="s"></param>
 		/// <returns></returns>
-		public static JsLintConfiguration ParseString(string s, LinterType type)
+		public static JsLintConfiguration ParseString(string s)
 		{
-			var returner = new JsLintConfiguration {LinterType = type};
+			var returner = new JsLintConfiguration();
 			// if there are no options we return an empty default object
 			if (string.IsNullOrWhiteSpace(s)) return returner;
 			// otherwise, wipe the bool options
@@ -518,15 +313,10 @@ namespace SharpLinter.Config
 
 		public string GlobalsToString()
 		{
-			return Globals.Aggregate(string.Empty, (current, item) => current + ((current == string.Empty ? string.Empty : ", ") + item));
+			return Globals.Aggregate(string.Empty,
+				(current, item) => current + ((current == string.Empty ? string.Empty : ", ") + item));
 		}
-
-		private void SetGlobal(string varName)
-		{
-			var predef = GetOption("predef", String.Empty);
-			SetOption("predef", predef.AddListItem(varName, " "));
-		}
-
+		
 		public void SetFileExclude(string mask)
 		{
 			ExcludeFiles.Add(mask);
@@ -537,23 +327,18 @@ namespace SharpLinter.Config
 		/// </summary>
 		/// <param name="option"></param>
 		/// <returns></returns>
-		public T GetOption<T>(string option)
-		{
-			return GetOption(option, default(T));
-		}
-
-		private T GetOption<T>(string option, T defaultValue)
+		public T GetOption<T>(string option, T defaultValue = default(T))
 		{
 			option = option.Trim().ToLower();
 			object value;
 			if (!_options.TryGetValue(option, out value)) return defaultValue;
 			if (value is T)
 			{
-				return (T) value;
+				return (T)value;
 			}
-			throw new Exception("The option '" + option + "' is not of type " + typeof (T));
+			throw new Exception("The option '" + option + "' is not of type " + typeof(T));
 		}
-
+		
 		private bool HasOption(string option)
 		{
 			return _options.ContainsKey(option.ToLower().Trim());
@@ -637,54 +422,7 @@ namespace SharpLinter.Config
 				throw new Exception("Unknown option '" + option + "'");
 			}
 		}
-
-		private static Dictionary<string, Tuple<string, Type>> _Descriptions;
-
-		/// <summary>
-		/// Descriptions of each option, pulled from Js Lint
-		/// </summary>
-		private static readonly Dictionary<string, Tuple<string, Type>> DescriptionsLint = new Dictionary
-			<string, Tuple<string, Type>>
-		{
-			{"adsafe", BoolOpt("if ADsafe should be enforced")},
-			{"bitwise", BoolOpt("allow (lint) or enforce (hint) use of bitwise operators")},
-			{"browser", BoolOpt("if the standard browser globals should be predefined")},
-			{"cap", BoolOpt("if upper case HTML should be allowed")},
-			{"css", BoolOpt("if CSS workarounds should be tolerated")},
-			{"debug", BoolOpt("if debugger statements should be allowed")},
-			{"devel", BoolOpt("if logging should be allowed (console, alert, etc.)")},
-			{"eqeq", BoolOpt("tolerate != and ==")},
-			{"es5", BoolOpt("if ES5 syntax should be allowed")},
-			{"evil", BoolOpt("if eval should be allowed")},
-			{"forin", BoolOpt("if unfiltered for in statements should be allowed.")},
-			{"fragment", BoolOpt("if HTML fragments should be allowed")},
-			{"maxerr", Tuple.Create("maximum number of errors", typeof (int))},
-			{"newcap", BoolOpt("tolerate initial caps on constructor functions")},
-			{"nomen", BoolOpt("if names should not be checked for initial or trailing underbars")},
-			{"on", BoolOpt("if HTML event handlers should be allowed")},
-			{"onevar", BoolOpt("if only one var statement per function should be allowed")},
-			{"passfail", BoolOpt("if the scan should stop on first error")},
-			{"predef", Tuple.Create("space seperated list of predefined globals", typeof (string))},
-			{"plusplus", BoolOpt("if increment/decrement should be allowed")},
-			{"regexp", BoolOpt("if the . should not be allowed in regexp literals")},
-			{"rhino", BoolOpt("if the Rhino environment globals should be predefined")},
-			{"safe", BoolOpt("if the safe subset rules are enforced.")},
-			{"sub", BoolOpt("if subscript notation may be used for expressions better expressed in dot notation.")},
-			{
-				"sloppy",
-				BoolOpt(
-					"if the ES5 'use strict'; pragma is not required. Do not use this pragma unless you know what you are doing.")
-			},
-			{"strict", BoolOpt("require the \"use strict\"; pragma")},
-			{"undef", BoolOpt("if variables and functions need not be declared before used. ")},
-			{"unparam", BoolOpt("if warnings should not be given for unused parameters.")},
-			{"unused", BoolOpt("show unused local variables")},
-			{"vars", BoolOpt("if multiple var statement per function should be allowed")},
-			{"windows", BoolOpt("if MS Windows-specigic globals should be predefined")},
-			{"white", BoolOpt("if strict whitespace rules apply")},
-			{"widget", BoolOpt("if the Yahoo Widgets globals should be predefined")}
-		};
-
+		
 		private static readonly Dictionary<string, Tuple<string, Type>> DescriptionsHint = new Dictionary
 			<string, Tuple<string, Type>>
 		{

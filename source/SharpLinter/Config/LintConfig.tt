@@ -83,12 +83,18 @@ namespace SharpLinter.Config
 	{
 <#foreach (var property in settings) {#>
 		/// <summary>
-		/// JSON setting for <#=property.JsonName#>.
+		/// Gets or sets JSON setting for <#=property.JsonName#>.
 		/// </summary>
 		[JsonProperty("<#=property.JsonName#>")]
 		public <#=property.Type#> <#=property.Name#> { get; set; } = <#=property.DefaultValue#>;
 
-<#}#>	}
+<#}#>
+		/// <summary>
+		/// Gets or sets the list of files/directories to exclude.
+		///	</summary>
+		[JsonProperty("excludelist")]
+		public string[] Excludelist { get; set; } = null;
+	}
 }
 <#+
 private static Dictionary<string, Tuple<Type, String>> specialOptions = new Dictionary<string, Tuple<Type, String>>

@@ -46,7 +46,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Config\ConfigFileParser.cs" />
     <Compile Include="Config\ConfigParser.cs" />
     <Compile Include="Config\FilePathMatcher.cs" />
     <Compile Include="Config\JsLintConfiguration.cs" />
