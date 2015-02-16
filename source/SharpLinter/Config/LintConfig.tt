@@ -42,8 +42,8 @@ using (var thing = lintFile.OpenText())
 				var name = line.Substring(0, line.IndexOf(':'));
 
 				settings.Add(specialOptions.ContainsKey(name)
-					? new JsonProperty(name, FirstLetterToUpper(name), specialOptions[name].ToString())
-					: new JsonProperty(name, FirstLetterToUpper(name), "bool"));
+					? new JsonProperty(name, FirstLetterToUpper(name), specialOptions[name].Item1.ToString(), specialOptions[name].Item2.ToString())
+					: new JsonProperty(name, FirstLetterToUpper(name), "bool", "true"));
 			}
 		}
 		else if (line.EndsWith("exports.val = {"))
@@ -68,8 +68,8 @@ using (var thing = lintFile.OpenText())
 				var name = line.Substring(0, line.IndexOf(':'));
 
 				settings.Add(specialOptions.ContainsKey(name)
-					? new JsonProperty(name, FirstLetterToUpper(name), specialOptions[name].ToString())
-					: new JsonProperty(name, FirstLetterToUpper(name), "bool"));
+					? new JsonProperty(name, FirstLetterToUpper(name), specialOptions[name].Item1.ToString(), specialOptions[name].Item2.ToString())
+					: new JsonProperty(name, FirstLetterToUpper(name), "bool", "true"));
 			}
 		}
 	}
@@ -86,39 +86,41 @@ namespace SharpLinter.Config
 		/// JSON setting for <#=property.JsonName#>.
 		/// </summary>
 		[JsonProperty("<#=property.JsonName#>")]
-		public <#=property.Type#> <#=property.Name#> { get; set; }
+		public <#=property.Type#> <#=property.Name#> { get; set; } = <#=property.DefaultValue#>;
 
 <#}#>	}
 }
 <#+
-private static Dictionary<string, Type> specialOptions = new Dictionary<string, Type>
+private static Dictionary<string, Tuple<Type, String>> specialOptions = new Dictionary<string, Tuple<Type, String>>
 {
-	{"maxerr", typeof(int)},
-	{"indent", typeof(int)},
-	{"maxparams", typeof(int)},
-	{"maxdepth", typeof(int)},
-	{"maxstatements", typeof(int)},
-	{"maxlen", typeof(int)},
-	{"maxcomplexity", typeof(int)},
-	{"shadow", typeof(string)},
-	{"unused", typeof(string)},
-	{"latedef", typeof(string)},
-	{"quotmark", typeof(string)},
-	{"globals", typeof(string[])},
+	{"maxerr", new Tuple<Type, String>(typeof(int), "50")},
+	{"indent", new Tuple<Type, String>(typeof(int), "4")},
+	{"maxparams", new Tuple<Type, String>(typeof(int), "0")},
+	{"maxdepth", new Tuple<Type, String>(typeof(int), "0")},
+	{"maxstatements", new Tuple<Type, String>(typeof(int), "0")},
+	{"maxlen", new Tuple<Type, String>(typeof(int), "0")},
+	{"maxcomplexity", new Tuple<Type, String>(typeof(int), "0")},
+	{"shadow", new Tuple<Type, String>(typeof(string), "\"true\"")},
+	{"unused", new Tuple<Type, String>(typeof(string), "\"true\"")},
+	{"latedef", new Tuple<Type, String>(typeof(string), "\"true\"")},
+	{"quotmark", new Tuple<Type, String>(typeof(string), "\"false\"")},
+	{"globals", new Tuple<Type, String>(typeof(string[]), "null")},
 };
 
 internal class JsonProperty
 {
-	public JsonProperty(string jsonName, string name, string type)
+	public JsonProperty(string jsonName, string name, string type, string defaultValue)
 	{
 		JsonName = jsonName;
 		Name = name;
 		Type = type;
+		DefaultValue = defaultValue;
 	}
 
 	public string JsonName { get; private set; }
 	public string Name { get; private set; }
 	public string Type { get; private set; }
+	public string DefaultValue { get; private set; }
 }
 
 public string FirstLetterToUpper(string str)
