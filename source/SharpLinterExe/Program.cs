@@ -125,7 +125,14 @@ namespace SharpLinter
 							break;
 						case "-f":
 						case "-rf":
-							filePaths.Add(new PathInfo(value, arg == "-rf"));
+                            if (File.Exists(value))
+                            {
+                                filePaths.Add(new PathInfo(value, arg == "-rf"));
+                            }else
+                            {
+                                Console.WriteLine("Cannot find file to lint {0}", value);
+                                goto exit;
+                            }
 							i++;
 							break;
 						case "-r":
