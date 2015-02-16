@@ -1,11 +1,79 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".cs" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
-<#@ output extension=".cs" #>
+<#@ import namespace="System.IO" #>
 <#
-var propertyList = new List<JsonProperty>{new JsonProperty("herp", "herp", "string")};
+
+var lintFile = Directory.GetParent(this.Host.TemplateFile).Parent.GetFiles("*.js").SingleOrDefault();
+if (lintFile == null)
+{
+	throw new FileNotFoundException("Unable to locate JSLint.js file.");
+}
+
+var settings = new List<JsonProperty>();
+
+using (var thing = lintFile.OpenText())
+{
+	string line;
+	while ((line = thing.ReadLine()) != null)
+	{
+		if (line.EndsWith("exports.bool = {"))
+		{
+			while ((line = thing.ReadLine()) != null)
+			{
+				if (line.Trim() == "};")
+				{
+					// End of the json block, break out.
+					break;
+				}
+
+				// This is the start of the JSLint configuration options.
+				// From here on we're looking for individual configuration
+				// options which can be present in a .jshintrc file.
+				if (line.Contains("*") || line.Contains("{") || line.Contains("}")) continue;
+
+				// This is an actual setting option, peel it out.
+				line = line.Trim();
+				if (!line.Contains(":")) continue;
+				
+				var name = line.Substring(0, line.IndexOf(':'));
+
+				settings.Add(specialOptions.ContainsKey(name)
+					? new JsonProperty(name, FirstLetterToUpper(name), specialOptions[name].ToString())
+					: new JsonProperty(name, FirstLetterToUpper(name), "bool"));
+			}
+		}
+		else if (line.EndsWith("exports.val = {"))
+		{
+			while ((line = thing.ReadLine()) != null)
+			{
+				if (line.Trim() == "};")
+				{
+					// End of the json block, break out.
+					break;
+				}
+
+				// This is the start of the JSLint configuration options.
+				// From here on we're looking for individual configuration
+				// options which can be present in a .jshintrc file.
+				if (line.Contains("*") || line.Contains("{") || line.Contains("}")) continue;
+
+				// This is an actual setting option, peel it out.
+				line = line.Trim();
+				if (!line.Contains(":")) continue;
+				
+				var name = line.Substring(0, line.IndexOf(':'));
+
+				settings.Add(specialOptions.ContainsKey(name)
+					? new JsonProperty(name, FirstLetterToUpper(name), specialOptions[name].ToString())
+					: new JsonProperty(name, FirstLetterToUpper(name), "bool"));
+			}
+		}
+	}
+}
 #>
 using Newtonsoft.Json;
 
@@ -13,15 +81,32 @@ namespace SharpLinter.Config
 {
 	internal class LintConfig
 	{
-<#foreach (var property in propertyList) {#>
+<#foreach (var property in settings) {#>
 		/// <summary>
 		/// JSON setting for <#=property.JsonName#>.
 		/// </summary>
 		[JsonProperty("<#=property.JsonName#>")]
 		public <#=property.Type#> <#=property.Name#> { get; set; }
+
 <#}#>	}
 }
 <#+
+private static Dictionary<string, Type> specialOptions = new Dictionary<string, Type>
+{
+	{"maxerr", typeof(int)},
+	{"indent", typeof(int)},
+	{"maxparams", typeof(int)},
+	{"maxdepth", typeof(int)},
+	{"maxstatements", typeof(int)},
+	{"maxlen", typeof(int)},
+	{"maxcomplexity", typeof(int)},
+	{"shadow", typeof(string)},
+	{"unused", typeof(string)},
+	{"latedef", typeof(string)},
+	{"quotmark", typeof(string)},
+	{"globals", typeof(string[])},
+};
+
 internal class JsonProperty
 {
 	public JsonProperty(string jsonName, string name, string type)
@@ -34,5 +119,16 @@ internal class JsonProperty
 	public string JsonName { get; private set; }
 	public string Name { get; private set; }
 	public string Type { get; private set; }
+}
+
+public string FirstLetterToUpper(string str)
+{
+	if (str == null)
+		return null;
+
+	if (str.Length > 1)
+		return char.ToUpper(str[0]) + str.Substring(1);
+
+	return str.ToUpper();
 }
 #>
