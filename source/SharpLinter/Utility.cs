@@ -57,6 +57,17 @@ namespace SharpLinter
         {
             return (obj as IDictionary<string, object>).ToDictionary(x => x.Key, x => x.Value);
         }
+
+        public static T FirstOrDefault<T>(this ExpandoObject obj, string key)
+        {
+            object r = obj.FirstOrDefault(x => x.Key == key);
+            return (r is T) ? (T)r : default(T);
+        }
+
+        public static ExpandoObject Get(this ExpandoObject obj, string key)
+        {
+            return (obj.FirstOrDefault<KeyValuePair<string, object>>(key).Value as IList<object>).FirstOrDefault() as ExpandoObject;
+        }
     }
 
 	public static class Utility

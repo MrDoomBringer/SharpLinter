@@ -120,18 +120,8 @@ namespace SharpLinter
 			lock (_lock)
 			{
 				var hasSkips = false;
-				var hasUnused = false;
-				if (_configuration.LinterType == LinterType.JSLint)
-				{
-					hasUnused = _configuration.GetOption<bool>("unused");
-				}
-				else if (_configuration.LinterType == LinterType.JSLint)
-				{
-					// we consider the "unused" option to be activated if the config value is either empty
-					// (since the default is "true") or anything other than "false"
-					var unusedConfig = _configuration.GetOption<string>("unused");
-					hasUnused = string.IsNullOrEmpty(unusedConfig) || unusedConfig != "false";
-				}
+				var hasUnused = _configuration.GetOption<bool>("unused");
+
 				var dataCollector = new LintDataCollector(hasUnused);
 
 				_lineExclusion = new List<bool>();

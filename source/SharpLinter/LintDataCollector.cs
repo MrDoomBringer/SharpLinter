@@ -19,76 +19,86 @@ namespace SharpLinter
 
         public void ProcessData(ExpandoObject data)
 		{
-            var dataDict = data.ToDictionary();
+            ExpandoObject errors = data.Get("errors");
 
-            if (dataDict == null) return;
-			if (dataDict.ContainsKey("errors"))
-			{
-				ProcessListOfObject(dataDict["errors"], error =>
-				{
-					var jsError = new JsLintData {Source = "lint"};
-					if (error.ContainsKey("line"))
-					{
-						jsError.Line = (int) error["line"];
-					}
+            if (errors!=null)
+            {
+                ProcessErrors(errors, error =>
+                {
+                    var jsError = new JsLintData { Source = "lint" };
 
-					if (error.ContainsKey("character"))
-					{
-						jsError.Character = (int) error["character"];
-					}
+                    if (error.Key=="line")
+                    {
+                        jsError.Line = Convert.ToInt32(error.Value);
+                    }
 
-					if (error.ContainsKey("reason"))
-					{
-						jsError.Reason = (string) error["reason"];
-					}
+                    if (error.Key == "character")
+                    {
+                        jsError.Character = Convert.ToInt32(error.Value);
+                    }
 
-					Errors.Add(jsError);
-				});
-			}
+                    if (error.Key == "reason")
+                    {
+                        jsError.Reason = (string)error.Value;
+                    }
 
-			if (_processUnuseds && dataDict.ContainsKey("unused"))
-			{
-				var lastLine = -1;
-				JsLintData jsError = null;
-				var unusedList = String.Empty;
-				var unusedCount = 0;
-				ProcessListOfObject(dataDict["unused"], unused =>
-				{
-					var line = 0;
-					if (unused.ContainsKey("line"))
-					{
-						line = (int) unused["line"];
-					}
-					if (line != lastLine)
-					{
-						if (jsError != null)
-						{
-							jsError.Reason = "Unused Variable" + (unusedCount > 1 ? "s " : " ") + unusedList;
-							Errors.Add(jsError);
-						}
-						jsError = new JsLintData {Source = "lint", Character = -1, Line = line};
-						unusedCount = 0;
-						unusedList = String.Empty;
-					}
+                    Errors.Add(jsError);
+                });
+            }
 
-					if (unused.ContainsKey("name"))
-					{
-						unusedList += (unusedCount == 0 ? String.Empty : ", ") + unused["name"];
-						unusedCount++;
-					}
-					lastLine = line;
-				});
-				jsError.Reason = "Unused Variable" + (unusedCount > 1 ? "s " : " ") + unusedList;
-				Errors.Add(jsError);
-			}
-		}
+            ExpandoObject unuseds = data.Get("unused");
 
-		private static void ProcessListOfObject(object obj, Action<Dictionary<string, object>> processor)
-		{
+            if (_processUnuseds && unuseds!=null)
+            {
+                var lastLine = -1;
+                JsLintData jsError = null;
+                var unusedList = String.Empty;
+                var unusedCount = 0;
+                ProcessErrors(unuseds, unused =>
+                {
+                    var line = 0;
+                    if (unused.Key=="line")
+                    {
+                        line = Convert.ToInt32(unused.Value);
+                    }
+                    if (line != lastLine)
+                    {
+                        if (jsError != null)
+                        {
+                            jsError.Reason = "Unused Variable" + (unusedCount > 1 ? "s " : " ") + unusedList;
+                            Errors.Add(jsError);
+                        }
+                        jsError = new JsLintData { Source = "lint", Character = -1, Line = line };
+                        unusedCount = 0;
+                        unusedList = String.Empty;
+                    }
+
+                    if (unused.Key=="name")
+                    {
+                        unusedList += (unusedCount == 0 ? String.Empty : ", ") + unused.Value;
+                        unusedCount++;
+                    }
+                    lastLine = line;
+                });
+                jsError.Reason = "Unused Variable" + (unusedCount > 1 ? "s " : " ") + unusedList;
+                Errors.Add(jsError);
+            }
+        }
+
+        private static void ProcessListOfObject(object obj, Action<Dictionary<string, object>> processor)
+        {
             var array = obj as object[];
 
             if (array == null) return;
             foreach (var objItemDictionary in array.OfType<Dictionary<string, object>>())
+            {
+                processor(objItemDictionary);
+            }
+        }
+
+        private static void ProcessErrors(ExpandoObject errors, Action<KeyValuePair<string, object>> processor)
+        {
+            foreach (var objItemDictionary in errors.ToDictionary())
             {
                 processor(objItemDictionary);
             }
